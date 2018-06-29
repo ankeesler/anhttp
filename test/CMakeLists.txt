@@ -1,4 +1,5 @@
 include_directories("${PROJECT_SOURCE_DIR}/include")
+include_directories("$ENV{ANHTTP_UNITY_ROOT}/src")
 add_executable(anhttp_test main.c)
 target_link_libraries(anhttp_test anhttp)
-add_test(anhttp_test anhttp_test)
+target_link_libraries(anhttp_test unity)

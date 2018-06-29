@@ -8,5 +8,6 @@ Testing/
 
 libanhttp.a
 anhttp_test
+libunity.a
 
 *.swp
