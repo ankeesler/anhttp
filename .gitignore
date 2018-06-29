@@ -1,13 +1,3 @@
-CMakeFiles
-CMakeCache.txt
-cmake_install.cmake
-Makefile
-*.cmake
-*.tcl
-Testing/
-
-libanhttp.a
-anhttp_test
-libunity.a
+build
 
 *.swp

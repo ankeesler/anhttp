@@ -2,6 +2,7 @@
 
 set -ex
 
-cmake .
+cd build
+cmake ..
 make anhttp_test
 ./test/anhttp_test
