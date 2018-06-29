@@ -4,5 +4,5 @@ set -ex
 
 cd build
 cmake ..
-make anhttp_test
-./test/anhttp_test
+make server_test
+./test/server_test
