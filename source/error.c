@@ -1,3 +1,3 @@
 #include "anhttp/anhttp.h"
 
-AnhttpError AnhttpErrorOK = "OK";
+AnhttpError_t AnhttpErrorOK = "OK";

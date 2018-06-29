@@ -1,9 +1,9 @@
 // Errors.
-typedef const char *AnhttpError;
-extern AnhttpError AnhttpErrorOK;
+typedef const char *AnhttpError_t;
+extern AnhttpError_t AnhttpErrorOK;
 
 // This is an HTTP server.
-typedef struct AnhttpServer {
+typedef struct {
     // The address on which the server listens.
     const char *address;
-};
+} AnhttpServer_t;
