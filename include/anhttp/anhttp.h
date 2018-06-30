@@ -1,6 +1,7 @@
 // Errors.
 typedef const char *AnhttpError_t;
 extern AnhttpError_t AnhttpErrorOK;
+extern AnhttpError_t AnhttpErrorSystem;
 
 // This is an HTTP server.
 //

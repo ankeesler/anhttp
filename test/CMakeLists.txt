@@ -1,5 +1,13 @@
 include_directories("${PROJECT_SOURCE_DIR}/include")
+include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("$ENV{ANHTTP_UNITY_ROOT}/src")
-add_executable(server_test server_test.c)
-target_link_libraries(server_test anhttp)
+
+add_executable(server_test
+    server_test.c
+    "${PROJECT_SOURCE_DIR}/source/error.c"
+    "${PROJECT_SOURCE_DIR}/source/server.c"
+    "${PROJECT_SOURCE_DIR}/source/syscall_stubs.c")
 target_link_libraries(server_test unity)
+
+add_executable(list_test list_test.c "${PROJECT_SOURCE_DIR}/source/list.c")
+target_link_libraries(list_test unity)

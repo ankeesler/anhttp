@@ -4,5 +4,9 @@ set -ex
 
 cd build
 cmake ..
-make server_test
-./test/server_test
+
+TESTS="server_test list_test"
+for t in $TESTS; do
+    make $t
+    ./test/$t
+done
