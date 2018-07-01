@@ -3,7 +3,6 @@
 import sys
 
 def generate_c_file(line, name, args, file_lines):
-    file_lines += "#include \"assert.h\"\n"
     if len(args) > 0:
         file_lines += "%sArgs_t %sArgs[64];\n" % (name, name)
     file_lines += "int %sArgsCount = 0;\n" % (name)
@@ -11,17 +10,24 @@ def generate_c_file(line, name, args, file_lines):
     file_lines += line + "\n"
     file_lines += "    if (%sArgsCount == 64) assert(0);\n" % (name)
     for arg in args:
-        file_lines += "    %sArgs[%sArgsCount].%s = %s;\n" % (name, name, arg[1], arg[1])
+        field = arg[1]
+        if field[0] == "*":
+            field = field[1:]
+        file_lines += "    %sArgs[%sArgsCount].%s = %s;\n" % (name, name, field, arg[1])
     file_lines += "    %sArgsCount++;\n" % (name)
     file_lines += "    return %sReturn;\n" % (name)
     file_lines += "}\n"
     file_lines += "\n"
 
 def generate_h_file(line, name, args, file_lines):
+    file_lines += "\n"
     if len(args) > 0:
         file_lines += "typedef struct {\n"
         for arg in args:
-            file_lines += "    %s %s;\n" % (arg[0], arg[1])
+            field = arg[1]
+            if field[0] == "*":
+                field = field[1:]
+            file_lines += "    %s %s;\n" % (arg[0], field)
         file_lines += "} %sArgs_t;\n" % (name)
         file_lines += "extern %sArgs_t %sArgs[];\n" % (name, name)
     file_lines += "extern int %sArgsCount;\n" % (name)
@@ -41,13 +47,12 @@ def get_args(line, name):
     for arg in args.split(","):
         arg = arg.strip()
         split = arg.split(" ")
-        if split[1][0] == "*":
-            teyep = split[0] + " *"
-            name = split[1][1:]
-        else:
-            teyep = split[0]
-            name = split[1]
-        ret.append((teyep, name))
+        if split[0] == "const":
+            split = split[1:]
+        if len(split) == 3: # struct sockaddr *addr
+            split[0] = " ".join(split[0:2])
+            split[1] = split[2]
+        ret.append((split[0], split[1]))
 
     return ret
 
@@ -78,12 +83,15 @@ def main():
 
     h_file = sys.argv[1][:-2] + "_stubs.h"
     with open(h_file, "w") as f:
+        f.write("#include <netinet/in.h>\n")
         for line in h_file_lines:
             f.write(line)
 
     c_file = sys.argv[1][:-2] + "_stubs.c"
     with open(c_file, "w") as f:
         f.write("#include \"%s\"\n" % (h_file))
+        f.write("#include \"assert.h\"\n")
+        f.write("\n")
         for line in c_file_lines:
             f.write(line)
 
