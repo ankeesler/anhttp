@@ -13,7 +13,10 @@ def generate_c_file(line, name, args, file_lines):
         field = arg[1]
         if field[0] == "*":
             field = field[1:]
-        file_lines += "    %sArgs[%sArgsCount].%s = %s;\n" % (name, name, field, arg[1])
+        rvalue = arg[1]
+        if arg[0] == "char":
+            rvalue = "(char *)" + rvalue[1:]
+        file_lines += "    %sArgs[%sArgsCount].%s = %s;\n" % (name, name, field, rvalue)
     file_lines += "    %sArgsCount++;\n" % (name)
     file_lines += "    return %sReturn;\n" % (name)
     file_lines += "}\n"
@@ -25,7 +28,7 @@ def generate_h_file(line, name, args, file_lines):
         file_lines += "typedef struct {\n"
         for arg in args:
             field = arg[1]
-            if field[0] == "*":
+            if field[0] == "*" and arg[0] != "char":
                 field = field[1:]
             file_lines += "    %s %s;\n" % (arg[0], field)
         file_lines += "} %sArgs_t;\n" % (name)

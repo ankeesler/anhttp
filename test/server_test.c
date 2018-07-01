@@ -3,6 +3,7 @@
 #include "unity.h"
 
 #include "source/syscall_stubs.h"
+#include "source/log_stubs.h"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -109,15 +110,20 @@ static void nonDefaultAddressTest(void) {
 }
 
 static void socketFailureTest(void) {
+    anhttpLogArgsCount = 0;
     anhttpSocketReturn = -1;
 
     AnhttpServer_t server;
     memset(&server, 0, sizeof(server));
     AnhttpError_t error = AnhttpListenAndServe(&server);
     TEST_ASSERT_EQUAL_STRING(AnhttpErrorSystem, error);
+
+    TEST_ASSERT_EQUAL_INT(1, anhttpLogArgsCount);
+    TEST_ASSERT_EQUAL_STRING("Failed to create listen socket\n", anhttpLogArgs[0].string);
 }
 
 static void bindFailureTest(void) {
+    anhttpLogArgsCount = 0;
     anhttpSocketReturn = 5;
     anhttpBindReturn = -1;
 
@@ -125,26 +131,39 @@ static void bindFailureTest(void) {
     memset(&server, 0, sizeof(server));
     AnhttpError_t error = AnhttpListenAndServe(&server);
     TEST_ASSERT_EQUAL_STRING(AnhttpErrorSystem, error);
+
+    TEST_ASSERT_EQUAL_INT(1, anhttpLogArgsCount);
+    TEST_ASSERT_EQUAL_STRING("Failed to bind socket to address\n", anhttpLogArgs[0].string);
 }
 
 static void listenFailureTest(void) {
+    anhttpLogArgsCount = 0;
     anhttpSocketReturn = 5;
+    anhttpBindReturn = 0;
     anhttpListenReturn = -1;
 
     AnhttpServer_t server;
     memset(&server, 0, sizeof(server));
     AnhttpError_t error = AnhttpListenAndServe(&server);
     TEST_ASSERT_EQUAL_STRING(AnhttpErrorSystem, error);
+
+    TEST_ASSERT_EQUAL_INT(1, anhttpLogArgsCount);
+    TEST_ASSERT_EQUAL_STRING("Failed to listen on socket\n", anhttpLogArgs[0].string);
 }
 
 static void acceptFailureTest(void) {
+    anhttpLogArgsCount = 0;
     anhttpSocketReturn = 5;
+    anhttpListenReturn = 0;
     anhttpAcceptReturn = -1;
 
     AnhttpServer_t server;
     memset(&server, 0, sizeof(server));
     AnhttpError_t error = AnhttpListenAndServe(&server);
     TEST_ASSERT_EQUAL_STRING(AnhttpErrorSystem, error);
+
+    TEST_ASSERT_EQUAL_INT(1, anhttpLogArgsCount);
+    TEST_ASSERT_EQUAL_STRING("Failed to accept socket connection\n", anhttpLogArgs[0].string);
 }
 
 int main(int argc, char *argv[]) {

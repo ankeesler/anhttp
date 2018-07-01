@@ -1,6 +1,7 @@
 #include "anhttp/anhttp.h"
 
 #include "syscall.h"
+#include "log.h"
 
 #include <sys/socket.h>
 #include <string.h>
@@ -30,6 +31,7 @@ AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
 
     int listenSock = anhttpSocket(AF_INET, SOCK_STREAM, 0);
     if (listenSock == -1) {
+        anhttpLog("Failed to create listen socket\n");
         return AnhttpErrorSystem;
     }
 
@@ -37,12 +39,14 @@ AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
             (const struct sockaddr *)&listenSockAddr,
             sizeof(listenSockAddr));
     if (err == -1) {
+        anhttpLog("Failed to bind socket to address\n");
         anhttpClose(listenSock); // TODO: log error!
         return AnhttpErrorSystem;
     }
         
     err = anhttpListen(listenSock, 0);
     if (err == -1) {
+        anhttpLog("Failed to listen on socket\n");
         anhttpClose(listenSock); // TODO: log error!
         return AnhttpErrorSystem;
     }
@@ -51,7 +55,8 @@ AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
     int connSock = anhttpAccept(listenSock,
             (struct sockaddr *)&listenSockAddr,
             &listenSockAddrLen);
-    if (err == -1) {
+    if (connSock == -1) {
+        anhttpLog("Failed to accept socket connection\n");
         anhttpClose(listenSock); // TODO: log error!
         return AnhttpErrorSystem;
     }
