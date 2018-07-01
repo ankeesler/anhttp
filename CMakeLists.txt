@@ -1,7 +1,11 @@
 cmake_minimum_required (VERSION 3.11)
 project (anhttp)
 
-# TODO: assert that ANHTTP_UNITY_ROOT is defined.
+if (DEFINED ENV{ANHTTP_UNITY_ROOT})
+    message(STATUS "ANHTTP_UNITY_ROOT is set to $ENV{ANHTTP_UNITY_ROOT}")
+else()
+    message(FATAL_ERROR "ANHTTP_UNITY_ROOT is not set")
+endif()
 
 set(CMAKE_C_FLAGS "-g -ggdb -O0 -Wall -Werror")
 
