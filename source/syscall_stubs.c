@@ -1,6 +1,8 @@
-#include "source/syscall_stubs.h"
-#include "assert.h"
+#include "syscall_stubs.h"
 
+#include <assert.h>
+
+// anhttpSocket
 anhttpSocketArgs_t anhttpSocketArgs[64];
 int anhttpSocketArgsCount = 0;
 int anhttpSocketReturn = 0;
@@ -13,6 +15,7 @@ int anhttpSocket(int domain, int type, int protocol) {
     return anhttpSocketReturn;
 }
 
+// anhttpListen
 anhttpListenArgs_t anhttpListenArgs[64];
 int anhttpListenArgsCount = 0;
 int anhttpListenReturn = 0;
@@ -24,6 +27,7 @@ int anhttpListen(int socket, int backlog) {
     return anhttpListenReturn;
 }
 
+// anhttpClose
 anhttpCloseArgs_t anhttpCloseArgs[64];
 int anhttpCloseArgsCount = 0;
 int anhttpCloseReturn = 0;
@@ -34,6 +38,7 @@ int anhttpClose(int fd) {
     return anhttpCloseReturn;
 }
 
+// anhttpAccept
 anhttpAcceptArgs_t anhttpAcceptArgs[64];
 int anhttpAcceptArgsCount = 0;
 int anhttpAcceptReturn = 0;
@@ -46,6 +51,7 @@ int anhttpAccept(int fd, struct sockaddr *address, socklen_t *address_len) {
     return anhttpAcceptReturn;
 }
 
+// anhttpBind
 anhttpBindArgs_t anhttpBindArgs[64];
 int anhttpBindArgsCount = 0;
 int anhttpBindReturn = 0;

@@ -1,5 +1,5 @@
 #include <netinet/in.h>
-
+// anhttpSocket
 typedef struct {
     int domain;
     int type;
@@ -9,7 +9,7 @@ extern anhttpSocketArgs_t anhttpSocketArgs[];
 extern int anhttpSocketArgsCount;
 extern int anhttpSocketReturn;
 
-
+// anhttpListen
 typedef struct {
     int socket;
     int backlog;
@@ -18,7 +18,7 @@ extern anhttpListenArgs_t anhttpListenArgs[];
 extern int anhttpListenArgsCount;
 extern int anhttpListenReturn;
 
-
+// anhttpClose
 typedef struct {
     int fd;
 } anhttpCloseArgs_t;
@@ -26,7 +26,7 @@ extern anhttpCloseArgs_t anhttpCloseArgs[];
 extern int anhttpCloseArgsCount;
 extern int anhttpCloseReturn;
 
-
+// anhttpAccept
 typedef struct {
     int fd;
     struct sockaddr address;
@@ -36,7 +36,7 @@ extern anhttpAcceptArgs_t anhttpAcceptArgs[];
 extern int anhttpAcceptArgsCount;
 extern int anhttpAcceptReturn;
 
-
+// anhttpBind
 typedef struct {
     int socket;
     struct sockaddr address;
@@ -46,3 +46,14 @@ extern anhttpBindArgs_t anhttpBindArgs[];
 extern int anhttpBindArgsCount;
 extern int anhttpBindReturn;
 
+#define SYSCALL_STUBS_H_RESET() \
+    anhttpSocketArgsCount = 0; \
+    anhttpSocketReturn = 0; \
+    anhttpListenArgsCount = 0; \
+    anhttpListenReturn = 0; \
+    anhttpCloseArgsCount = 0; \
+    anhttpCloseReturn = 0; \
+    anhttpAcceptArgsCount = 0; \
+    anhttpAcceptReturn = 0; \
+    anhttpBindArgsCount = 0; \
+    anhttpBindReturn = 0; \

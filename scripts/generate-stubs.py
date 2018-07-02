@@ -1,102 +1,156 @@
 #!/usr/bin/python
 
+import os
+import pprint
 import sys
 
-def generate_c_file(line, name, args, file_lines):
-    if len(args) > 0:
-        file_lines += "%sArgs_t %sArgs[64];\n" % (name, name)
-    file_lines += "int %sArgsCount = 0;\n" % (name)
-    file_lines += "int %sReturn = 0;\n" % (name)
-    file_lines += line + "\n"
-    file_lines += "    if (%sArgsCount == 64) assert(0);\n" % (name)
-    for arg in args:
-        field = arg[1]
-        if field[0] == "*":
-            field = field[1:]
-        rvalue = arg[1]
-        if arg[0] == "char":
-            rvalue = "(char *)" + rvalue[1:]
-        file_lines += "    %sArgs[%sArgsCount].%s = %s;\n" % (name, name, field, rvalue)
-    file_lines += "    %sArgsCount++;\n" % (name)
-    file_lines += "    return %sReturn;\n" % (name)
-    file_lines += "}\n"
-    file_lines += "\n"
+class StubFile:
+    def __init__(self):
+        self.includes = []
+        self.functions = []
 
-def generate_h_file(line, name, args, file_lines):
-    file_lines += "\n"
-    if len(args) > 0:
-        file_lines += "typedef struct {\n"
-        for arg in args:
-            field = arg[1]
-            if field[0] == "*" and arg[0] != "char":
-                field = field[1:]
-            file_lines += "    %s %s;\n" % (arg[0], field)
-        file_lines += "} %sArgs_t;\n" % (name)
-        file_lines += "extern %sArgs_t %sArgs[];\n" % (name, name)
-    file_lines += "extern int %sArgsCount;\n" % (name)
-    file_lines += "extern int %sReturn;\n" % (name)
-    file_lines += "\n"
+    def __str__(self):
+        s = ""
+        s += "includes: %s\n" % (self.includes)
+        s += "functions: %s\n" % ([f.__str__() for f in self.functions])
+        return s
 
-def get_args(line, name):
-    """Returns an array of tuples of the form (type, name)"""
-    if "()" in line:
-        return []
+    def add_include(self, include):
+        self.includes.append(include)
 
-    start_args = len("int ") + len(name) + 1
-    end_args = line.find(")")
-    args = line[start_args:end_args]
+    def add_function(self, function):
+        self.functions.append(function)
 
-    ret = []
-    for arg in args.split(","):
-        arg = arg.strip()
-        split = arg.split(" ")
-        if split[0] == "const":
-            split = split[1:]
-        if len(split) == 3: # struct sockaddr *addr
-            split[0] = " ".join(split[0:2])
-            split[1] = split[2]
-        ret.append((split[0], split[1]))
+class Function:
+    def __init__(self, line, name, return_type, args):
+        self.line = line
+        self.name = name
+        self.return_type = return_type
+        self.args = args
 
-    return ret
+    def __str__(self):
+        return "name: %s, return_type: %s, args: %s" % (self.name, self.return_type, [a.__str__() for a in self.args])
 
-def get_name(line):
-    name_start = len("int ")
-    name_end = line.find("(")
-    name = line[name_start:name_end]
-    return name
+class Arg:
+    def __init__(self, teyep, name):
+        self.teyep = teyep
+        self.name = name
 
-def process_func(line, c_file_lines, h_file_lines):
-    name = get_name(line)
-    args = get_args(line, name)
-    generate_c_file(line, name, args, c_file_lines)
-    generate_h_file(line, name, args, h_file_lines)
+    def __str__(self):
+        return "teyep: %s, name: %s" % (self.teyep, self.name)
+
+    def is_const(self):
+        return self.teyep.startswith("const")
+
+    def is_pointer(self):
+        return self.teyep.endswith("*")
+
+    def cleaned_type(self):
+        teyep = self.teyep
+        if self.is_const():
+            teyep = teyep[len("const "):]
+        if self.is_pointer():
+            teyep = teyep[:-1]
+        return teyep
+
+def parse_arg(line):
+    line = line.strip()
+    last_space = line.rindex(" ")
+    name = line[last_space+1:]
+    teyep = line[:last_space]
+    if name[0] == "*":
+        teyep += "*"
+        name = name[1:]
+    return Arg(teyep, name)
+
+def parse_args(line):
+    args = []
+    for arg in line.split(","):
+        args.append(parse_arg(arg))
+    return args
+
+def parse_function(line):
+    first_parens = line.index("(")
+    second_parens = line.index(")")
+    space_before_name = line.rindex(" ", 0, first_parens)
+    name = line[space_before_name+1:first_parens]
+    return_type = line[:space_before_name]
+    args = parse_args(line[first_parens+1:second_parens])
+    return Function(line, name, return_type, args)
+
+def parse_line(line, stub_file):
+    line = line.strip()
+    if line.startswith("#include"):
+        include = line[len("#include "):]
+        stub_file.add_include(include)
+    elif ");" in line:
+        fcn = parse_function(line)
+        stub_file.add_function(fcn)
+
+def write_h_file(f, stub_file):
+    for include in stub_file.includes:
+        f.write("#include %s\n" % (include))
+
+    state = []
+    for function in stub_file.functions:
+        f.write("// %s\n" % (function.name))
+        f.write("typedef struct {\n")
+        for arg in function.args:
+            f.write("    %s %s;\n" % (arg.cleaned_type(), arg.name))
+        f.write("} %sArgs_t;\n" % (function.name))
+        f.write("extern %sArgs_t %sArgs[];\n" % (function.name, function.name))
+        f.write("extern int %sArgsCount;\n" % (function.name))
+        state.append("%sArgsCount" % (function.name))
+        f.write("extern int %sReturn;\n" % (function.name))
+        state.append("%sReturn" % (function.name))
+        f.write("\n")
+
+    file_name = os.path.basename(f.name).replace(".", "_").upper()
+    f.write("#define %s_RESET() \\\n" % file_name)
+    [f.write("    %s = 0; \\\n" % (s)) for s in state]
+
+def write_c_file(f, stub_file):
+    h_file_name = os.path.basename(f.name).replace(".c", ".h")
+    f.write("#include \"%s\"\n" % (h_file_name))
+    f.write("\n")
+    f.write("#include <assert.h>\n")
+    f.write("\n")
+
+    for function in stub_file.functions:
+        f.write("// %s\n" % (function.name))
+        f.write("%sArgs_t %sArgs[64];\n" % (function.name, function.name))
+        f.write("int %sArgsCount = 0;\n" % (function.name))
+        f.write("int %sReturn = 0;\n" % (function.name))
+        f.write("%s {\n" % (function.line.replace(";", "")))
+        f.write("    if (%sArgsCount == 64) assert(0);\n" % function.name)
+        for arg in function.args:
+            rvalue = arg.name
+            if arg.is_pointer():
+                rvalue = "*" + rvalue
+            f.write("    %sArgs[%sArgsCount].%s = %s;\n" % (function.name, function.name, arg.name, rvalue))
+        f.write("    %sArgsCount++;\n" % (function.name))
+        f.write("    return %sReturn;\n" % (function.name))
+        f.write("}\n")
+        f.write("\n")
 
 def main():
-    if len(sys.argv) < 2:
-        print "usage: %s path/to/source/file"  % (sys.argv[0])
+    if len(sys.argv) < 4:
+        print "usage: %s <path/to/header_file.h> <header_file_stubs.h> <header_file_stubs.c>"  % (sys.argv[0])
         exit(1)
 
-    c_file_lines = []
-    h_file_lines = []
-    with open(sys.argv[1]) as f:
-        for line in f:
-            line = line.strip()
-            if "int anhttp" in line:
-                process_func(line, c_file_lines, h_file_lines)
+    h_file_name = sys.argv[1]
+    generated_h_file_name = sys.argv[2]
+    generated_c_file_name = sys.argv[3]
 
-    h_file = sys.argv[1][:-2] + "_stubs.h"
-    with open(h_file, "w") as f:
-        f.write("#include <netinet/in.h>\n")
-        for line in h_file_lines:
-            f.write(line)
+    stub_file = StubFile()
+    with open(h_file_name) as f:
+        [parse_line(line, stub_file) for line in f]
 
-    c_file = sys.argv[1][:-2] + "_stubs.c"
-    with open(c_file, "w") as f:
-        f.write("#include \"%s\"\n" % (h_file))
-        f.write("#include \"assert.h\"\n")
-        f.write("\n")
-        for line in c_file_lines:
-            f.write(line)
+    with open(generated_h_file_name, "w") as f:
+        write_h_file(f, stub_file)
+
+    with open(generated_c_file_name, "w") as f:
+        write_c_file(f, stub_file)
 
 if __name__ == "__main__":
     main()
