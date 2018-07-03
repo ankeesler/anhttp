@@ -5,6 +5,7 @@ include_directories("$ENV{ANHTTP_UNITY_ROOT}/src")
 add_executable(server_test
     server_test.c
     "${PROJECT_SOURCE_DIR}/source/error.c"
+    "${PROJECT_SOURCE_DIR}/source/util.c"
     "${PROJECT_SOURCE_DIR}/source/server.c"
     "${PROJECT_SOURCE_DIR}/source/log.c"
     "${PROJECT_SOURCE_DIR}/source/syscall_stubs.c")

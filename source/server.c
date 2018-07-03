@@ -2,6 +2,7 @@
 
 #include "syscall.h"
 #include "log.h"
+#include "util.h"
 
 #include <sys/socket.h>
 #include <string.h>
@@ -26,17 +27,11 @@ AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
     }
 
     struct sockaddr_in listenSockAddr;
-    memset(&listenSockAddr, 0, sizeof(listenSockAddr));
-    listenSockAddr.sin_len = sizeof(listenSockAddr);
-    listenSockAddr.sin_family = AF_INET;
-    listenSockAddr.sin_port = htons(server->port);
-    switch (inet_pton(AF_INET,
-                server->address,
-                &listenSockAddr.sin_addr)) {
-        case 0:
-            return AnhttpErrorAddress;
-        case -1:
-            return AnhttpErrorSystem;
+    AnhttpError_t error = anhttpMakeSocketAddress(server->address,
+            server->port,
+            &listenSockAddr);
+    if (error != AnhttpErrorOK) {
+        return error;
     }
 
     int listenSock = anhttpSocket(AF_INET, SOCK_STREAM, 0);

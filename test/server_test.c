@@ -3,6 +3,7 @@
 #include "unity.h"
 
 #include "source/syscall_stubs.h"
+#include "source/util.h"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -25,14 +26,10 @@ static void successTest(void) {
     TEST_ASSERT_EQUAL_INT(0, anhttpSocketArgs[0].protocol);
 
     struct sockaddr_in expectedAddr;
-    memset(&expectedAddr, 0, sizeof(expectedAddr));
-    expectedAddr.sin_len = sizeof(expectedAddr);
-    expectedAddr.sin_family = AF_INET;
-    expectedAddr.sin_port = htons(ANHTTP_SERVER_DEFAULT_PORT);
-    TEST_ASSERT_EQUAL_INT(1,
-            inet_pton(AF_INET,
-                ANHTTP_SERVER_DEFAULT_ADDRESS,
-                &expectedAddr.sin_addr));
+    TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK,
+            anhttpMakeSocketAddress(ANHTTP_SERVER_DEFAULT_ADDRESS,
+                ANHTTP_SERVER_DEFAULT_PORT,
+                &expectedAddr));
 
     TEST_ASSERT_EQUAL_INT(1, anhttpBindArgsCount);
     TEST_ASSERT_EQUAL_INT(5, anhttpBindArgs[0].socket);
@@ -78,14 +75,10 @@ static void nonDefaultAddressTest(void) {
     TEST_ASSERT_EQUAL_INT(0, anhttpSocketArgs[0].protocol);
 
     struct sockaddr_in expectedAddr;
-    memset(&expectedAddr, 0, sizeof(expectedAddr));
-    expectedAddr.sin_len = sizeof(expectedAddr);
-    expectedAddr.sin_family = AF_INET;
-    expectedAddr.sin_port = htons(54321);
-    TEST_ASSERT_EQUAL_INT(1,
-            inet_pton(AF_INET,
-                "10.1.2.3",
-                &expectedAddr.sin_addr));
+    TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK,
+            anhttpMakeSocketAddress("10.1.2.3",
+                54321,
+                &expectedAddr));
 
     TEST_ASSERT_EQUAL_INT(1, anhttpBindArgsCount);
     TEST_ASSERT_EQUAL_INT(5, anhttpBindArgs[0].socket);
