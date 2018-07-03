@@ -12,3 +12,11 @@ target_link_libraries(server_test unity)
 
 add_executable(list_test list_test.c "${PROJECT_SOURCE_DIR}/source/list.c")
 target_link_libraries(list_test unity)
+
+add_executable(connection_queue_test
+    connection_queue_test.c
+    "${PROJECT_SOURCE_DIR}/source/connection_queue.c"
+    "${PROJECT_SOURCE_DIR}/source/thread.c"
+    "${PROJECT_SOURCE_DIR}/source/list.c"
+    "${PROJECT_SOURCE_DIR}/source/error.c")
+target_link_libraries(connection_queue_test unity)

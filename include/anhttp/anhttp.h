@@ -1,3 +1,8 @@
+// Anhttp master header.
+
+#ifndef __ANHTTP_H__
+#define __ANHTTP_H__
+
 // Errors.
 typedef const char *AnhttpError_t;
 // Everything is OK.
@@ -30,3 +35,5 @@ typedef struct {
 
 // Start listening for requests on this server.
 AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server);
+
+#endif // ifdef __ANHTTP_H__
