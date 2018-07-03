@@ -8,6 +8,14 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+static void tryClose(int fd) {
+    int err = anhttpClose(fd);
+    if (err == -1) {
+        anhttpLog("Failed to close fd %d: %s\n",
+                AnhttpGetSystemError());
+    }
+}
+
 AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
     if (server->address == NULL) {
         server->address = ANHTTP_SERVER_DEFAULT_ADDRESS;
@@ -22,7 +30,9 @@ AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
     listenSockAddr.sin_len = sizeof(listenSockAddr);
     listenSockAddr.sin_family = AF_INET;
     listenSockAddr.sin_port = htons(server->port);
-    switch (inet_pton(AF_INET, server->address, &listenSockAddr.sin_addr)) {
+    switch (inet_pton(AF_INET,
+                server->address,
+                &listenSockAddr.sin_addr)) {
         case 0:
             return AnhttpErrorAddress;
         case -1:
@@ -39,15 +49,17 @@ AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
             (const struct sockaddr *)&listenSockAddr,
             sizeof(listenSockAddr));
     if (err == -1) {
-        anhttpLog("Failed to bind socket to address\n");
-        anhttpClose(listenSock); // TODO: log error!
+        anhttpLog("Failed to bind socket to address: %s\n",
+                AnhttpGetSystemError());
+        tryClose(listenSock);
         return AnhttpErrorSystem;
     }
         
     err = anhttpListen(listenSock, 0);
     if (err == -1) {
-        anhttpLog("Failed to listen on socket\n");
-        anhttpClose(listenSock); // TODO: log error!
+        anhttpLog("Failed to listen on socket: %s\n",
+                AnhttpGetSystemError());
+        tryClose(listenSock);
         return AnhttpErrorSystem;
     }
 
@@ -56,13 +68,14 @@ AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
             (struct sockaddr *)&listenSockAddr,
             &listenSockAddrLen);
     if (connSock == -1) {
-        anhttpLog("Failed to accept socket connection\n");
-        anhttpClose(listenSock); // TODO: log error!
+        anhttpLog("Failed to accept on socket: %s\n",
+                AnhttpGetSystemError());
+        tryClose(listenSock);
         return AnhttpErrorSystem;
     }
 
-    anhttpClose(listenSock);  // TODO: log error!
-    anhttpClose(connSock);  // TODO: log error!
+    tryClose(listenSock);
+    tryClose(connSock);
 
     return AnhttpErrorOK;
 }
