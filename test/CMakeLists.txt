@@ -20,3 +20,9 @@ add_executable(connection_queue_test
     "${PROJECT_SOURCE_DIR}/source/list.c"
     "${PROJECT_SOURCE_DIR}/source/error.c")
 target_link_libraries(connection_queue_test unity)
+
+add_executable(util_test
+    util_test.c
+    "${PROJECT_SOURCE_DIR}/source/util.c"
+    "${PROJECT_SOURCE_DIR}/source/error.c")
+target_link_libraries(util_test unity)
