@@ -2,8 +2,10 @@
 
 #include "unity.h"
 
-#include "source/syscall_stubs.h"
 #include "source/util.h"
+
+#include "source/syscall_stubs.h"
+#include "source/listener_stubs.h"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -12,130 +14,53 @@
 
 static void successTest(void) {
     SYSCALL_STUBS_H_RESET();
-    anhttpSocketReturn = 5;
-    anhttpAcceptReturn = 6;
+    LISTENER_STUBS_H_RESET();
+    anhttpCreateListenerReturn = 5;
 
     AnhttpServer_t server;
     memset(&server, 0, sizeof(server));
     AnhttpError_t error = AnhttpListenAndServe(&server);
     TEST_ASSERT_EQUAL(AnhttpErrorOK, error);
 
-    TEST_ASSERT_EQUAL_INT(1, anhttpSocketArgsCount);
-    TEST_ASSERT_EQUAL_INT(AF_INET, anhttpSocketArgs[0].domain);
-    TEST_ASSERT_EQUAL_INT(SOCK_STREAM, anhttpSocketArgs[0].type);
-    TEST_ASSERT_EQUAL_INT(0, anhttpSocketArgs[0].protocol);
+    TEST_ASSERT_EQUAL_INT(1, anhttpCreateListenerArgsCount);
+    TEST_ASSERT_EQUAL_STRING(ANHTTP_SERVER_DEFAULT_ADDRESS,
+            anhttpCreateListenerArgs[0].address);
+    TEST_ASSERT_EQUAL_INT(ANHTTP_SERVER_DEFAULT_PORT,
+            anhttpCreateListenerArgs[0].port);
 
-    struct sockaddr_in expectedAddr;
-    TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK,
-            anhttpMakeSocketAddress(ANHTTP_SERVER_DEFAULT_ADDRESS,
-                ANHTTP_SERVER_DEFAULT_PORT,
-                &expectedAddr));
-
-    TEST_ASSERT_EQUAL_INT(1, anhttpBindArgsCount);
-    TEST_ASSERT_EQUAL_INT(5, anhttpBindArgs[0].socket);
-    TEST_ASSERT_EQUAL_MEMORY(&expectedAddr,
-            &anhttpBindArgs[0].address,
-            sizeof(expectedAddr));
-    TEST_ASSERT_EQUAL(sizeof(expectedAddr), anhttpBindArgs[0].address_len);
-
-    TEST_ASSERT_EQUAL_INT(1, anhttpListenArgsCount);
-    TEST_ASSERT_EQUAL_INT(5, anhttpListenArgs[0].socket);
-    TEST_ASSERT_EQUAL_INT(0, anhttpListenArgs[0].backlog);
-
-    TEST_ASSERT_EQUAL_INT(1, anhttpAcceptArgsCount);
-    TEST_ASSERT_EQUAL_MEMORY(&expectedAddr,
-            &anhttpAcceptArgs[0].address,
-            sizeof(expectedAddr));
-    TEST_ASSERT_EQUAL(sizeof(expectedAddr), anhttpAcceptArgs[0].address_len);
-
-    TEST_ASSERT_EQUAL_INT(2, anhttpCloseArgsCount);
-    TEST_ASSERT_EQUAL_INT(5, anhttpCloseArgs[0].fd);
-    TEST_ASSERT_EQUAL_INT(6, anhttpCloseArgs[1].fd);
+    TEST_ASSERT_EQUAL_INT(1, anhttpCloseListenerArgsCount);
+    TEST_ASSERT_EQUAL_INT(5, anhttpCloseListenerArgs[0].listener);
 }
 
 static void nonDefaultAddressTest(void) {
-    anhttpSocketArgsCount = 0;
-    anhttpBindArgsCount = 0;
-    anhttpListenArgsCount = 0;
-    anhttpAcceptArgsCount = 0;
-    anhttpCloseArgsCount = 0;
-    anhttpSocketReturn = 5;
-    anhttpAcceptReturn = 6;
+    SYSCALL_STUBS_H_RESET();
+    LISTENER_STUBS_H_RESET();
+    anhttpCreateListenerReturn = 5;
 
     AnhttpServer_t server;
     memset(&server, 0, sizeof(server));
-    server.address = "10.1.2.3";
-    server.port = 54321;
+    server.address = "127.0.0.1";
+    server.port = 4477;
     AnhttpError_t error = AnhttpListenAndServe(&server);
     TEST_ASSERT_EQUAL(AnhttpErrorOK, error);
 
-    TEST_ASSERT_EQUAL_INT(1, anhttpSocketArgsCount);
-    TEST_ASSERT_EQUAL_INT(AF_INET, anhttpSocketArgs[0].domain);
-    TEST_ASSERT_EQUAL_INT(SOCK_STREAM, anhttpSocketArgs[0].type);
-    TEST_ASSERT_EQUAL_INT(0, anhttpSocketArgs[0].protocol);
-
-    struct sockaddr_in expectedAddr;
-    TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK,
-            anhttpMakeSocketAddress("10.1.2.3",
-                54321,
-                &expectedAddr));
-
-    TEST_ASSERT_EQUAL_INT(1, anhttpBindArgsCount);
-    TEST_ASSERT_EQUAL_INT(5, anhttpBindArgs[0].socket);
-    TEST_ASSERT_EQUAL_MEMORY(&expectedAddr,
-            &anhttpBindArgs[0].address,
-            sizeof(expectedAddr));
-    TEST_ASSERT_EQUAL(sizeof(expectedAddr), anhttpBindArgs[0].address_len);
-
-    TEST_ASSERT_EQUAL_INT(1, anhttpListenArgsCount);
-    TEST_ASSERT_EQUAL_INT(5, anhttpListenArgs[0].socket);
-    TEST_ASSERT_EQUAL_INT(0, anhttpListenArgs[0].backlog);
+    TEST_ASSERT_EQUAL_INT(1, anhttpCreateListenerArgsCount);
+    TEST_ASSERT_EQUAL_STRING("127.0.0.1",
+            anhttpCreateListenerArgs[0].address);
+    TEST_ASSERT_EQUAL_INT(4477,
+            anhttpCreateListenerArgs[0].port);
 
     TEST_ASSERT_EQUAL_INT(1, anhttpAcceptArgsCount);
-    TEST_ASSERT_EQUAL_MEMORY(&expectedAddr,
-            &anhttpAcceptArgs[0].address,
-            sizeof(expectedAddr));
-    TEST_ASSERT_EQUAL(sizeof(expectedAddr), anhttpAcceptArgs[0].address_len);
+    TEST_ASSERT_EQUAL_INT(5, anhttpAcceptArgs[0].fd);
 
-    TEST_ASSERT_EQUAL_INT(2, anhttpCloseArgsCount);
-    TEST_ASSERT_EQUAL_INT(5, anhttpCloseArgs[0].fd);
-    TEST_ASSERT_EQUAL_INT(6, anhttpCloseArgs[1].fd);
+    TEST_ASSERT_EQUAL_INT(1, anhttpCloseListenerArgsCount);
+    TEST_ASSERT_EQUAL_INT(5, anhttpCloseListenerArgs[0].listener);
 }
 
-static void socketFailureTest(void) {
-    anhttpSocketReturn = -1;
-
-    AnhttpServer_t server;
-    memset(&server, 0, sizeof(server));
-    AnhttpError_t error = AnhttpListenAndServe(&server);
-    TEST_ASSERT_EQUAL_STRING(AnhttpErrorSystem, error);
-}
-
-static void bindFailureTest(void) {
-    anhttpSocketReturn = 5;
-    anhttpBindReturn = -1;
-
-    AnhttpServer_t server;
-    memset(&server, 0, sizeof(server));
-    AnhttpError_t error = AnhttpListenAndServe(&server);
-    TEST_ASSERT_EQUAL_STRING(AnhttpErrorSystem, error);
-}
-
-static void listenFailureTest(void) {
-    anhttpSocketReturn = 5;
-    anhttpBindReturn = 0;
-    anhttpListenReturn = -1;
-
-    AnhttpServer_t server;
-    memset(&server, 0, sizeof(server));
-    AnhttpError_t error = AnhttpListenAndServe(&server);
-    TEST_ASSERT_EQUAL_STRING(AnhttpErrorSystem, error);
-}
-
-static void acceptFailureTest(void) {
-    anhttpSocketReturn = 5;
-    anhttpListenReturn = 0;
-    anhttpAcceptReturn = -1;
+static void createListenerFailTest(void) {
+    SYSCALL_STUBS_H_RESET();
+    LISTENER_STUBS_H_RESET();
+    anhttpCreateListenerReturn = -1;
 
     AnhttpServer_t server;
     memset(&server, 0, sizeof(server));
@@ -147,9 +72,6 @@ int main(int argc, char *argv[]) {
     UNITY_BEGIN();
     RUN_TEST(successTest);
     RUN_TEST(nonDefaultAddressTest);
-    RUN_TEST(socketFailureTest);
-    RUN_TEST(bindFailureTest);
-    RUN_TEST(listenFailureTest);
-    RUN_TEST(acceptFailureTest);
+    RUN_TEST(createListenerFailTest);
     return UNITY_END();
 }

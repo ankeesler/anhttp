@@ -2,7 +2,7 @@
 
 #include "syscall.h"
 #include "log.h"
-#include "util.h"
+#include "listener.h"
 
 #include <sys/socket.h>
 #include <string.h>
@@ -26,50 +26,27 @@ AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
         server->port = ANHTTP_SERVER_DEFAULT_PORT;
     }
 
-    struct sockaddr_in listenSockAddr;
-    AnhttpError_t error = anhttpMakeSocketAddress(server->address,
-            server->port,
-            &listenSockAddr);
-    if (error != AnhttpErrorOK) {
-        return error;
-    }
-
-    int listenSock = anhttpSocket(AF_INET, SOCK_STREAM, 0);
-    if (listenSock == -1) {
-        anhttpLog("Failed to create listen socket\n");
+    int listener = anhttpCreateListener(server->address, server->port);
+    if (listener == -1) {
         return AnhttpErrorSystem;
     }
 
-    int err = anhttpBind(listenSock,
-            (const struct sockaddr *)&listenSockAddr,
-            sizeof(listenSockAddr));
-    if (err == -1) {
-        anhttpLog("Failed to bind socket to address: %s\n",
-                AnhttpGetSystemError());
-        tryClose(listenSock);
-        return AnhttpErrorSystem;
-    }
-        
-    err = anhttpListen(listenSock, 0);
-    if (err == -1) {
-        anhttpLog("Failed to listen on socket: %s\n",
-                AnhttpGetSystemError());
-        tryClose(listenSock);
-        return AnhttpErrorSystem;
-    }
-
-    socklen_t listenSockAddrLen = sizeof(listenSockAddr);
-    int connSock = anhttpAccept(listenSock,
-            (struct sockaddr *)&listenSockAddr,
-            &listenSockAddrLen);
+    struct sockaddr_in connSockAddr;
+    socklen_t connSockAddrLen;
+    int connSock = anhttpAccept(listener,
+            (struct sockaddr *)&connSockAddr,
+            &connSockAddrLen);
     if (connSock == -1) {
         anhttpLog("Failed to accept on socket: %s\n",
                 AnhttpGetSystemError());
-        tryClose(listenSock);
+        tryClose(listener);
         return AnhttpErrorSystem;
     }
 
-    tryClose(listenSock);
+    if (anhttpCloseListener(listener) != -1) {
+        anhttpLog("Failed to close listener: %s\n",
+                AnhttpGetSystemError());
+    }
     tryClose(connSock);
 
     return AnhttpErrorOK;

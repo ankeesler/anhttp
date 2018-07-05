@@ -49,7 +49,7 @@ class Arg:
         teyep = self.teyep
         if self.is_const():
             teyep = teyep[len("const "):]
-        if self.is_pointer():
+        if self.is_pointer() and "char" not in self.teyep:
             teyep = teyep[:-1]
         return teyep
 
@@ -83,13 +83,14 @@ def parse_line(line, stub_file):
     if line.startswith("#include"):
         include = line[len("#include "):]
         stub_file.add_include(include)
-    elif ");" in line:
+    elif ");" in line and not line.startswith("//"):
         fcn = parse_function(line)
         stub_file.add_function(fcn)
 
 def write_h_file(f, stub_file):
     for include in stub_file.includes:
         f.write("#include %s\n" % (include))
+    f.write("\n")
 
     state = []
     for function in stub_file.functions:
@@ -126,7 +127,10 @@ def write_c_file(f, stub_file):
         for arg in function.args:
             rvalue = arg.name
             if arg.is_pointer():
-                rvalue = "*" + rvalue
+                if "char" in arg.teyep:
+                    rvalue = "(char *)" + rvalue
+                else:
+                    rvalue = "*" + rvalue
             f.write("    %sArgs[%sArgsCount].%s = %s;\n" % (function.name, function.name, arg.name, rvalue))
         f.write("    %sArgsCount++;\n" % (function.name))
         f.write("    return %sReturn;\n" % (function.name))
