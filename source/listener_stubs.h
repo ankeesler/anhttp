@@ -4,7 +4,7 @@
 
 // anhttpCreateListener
 typedef struct {
-    char* address;
+    const char* address;
     int port;
 } anhttpCreateListenerArgs_t;
 extern anhttpCreateListenerArgs_t anhttpCreateListenerArgs[];

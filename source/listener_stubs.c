@@ -8,7 +8,7 @@ int anhttpCreateListenerArgsCount = 0;
 int anhttpCreateListenerReturn = 0;
 int anhttpCreateListener(const char *address, int port) {
     if (anhttpCreateListenerArgsCount == 64) assert(0);
-    anhttpCreateListenerArgs[anhttpCreateListenerArgsCount].address = (char *)address;
+    anhttpCreateListenerArgs[anhttpCreateListenerArgsCount].address = address;
     anhttpCreateListenerArgs[anhttpCreateListenerArgsCount].port = port;
     anhttpCreateListenerArgsCount++;
     return anhttpCreateListenerReturn;

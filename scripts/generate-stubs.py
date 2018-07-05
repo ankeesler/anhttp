@@ -45,12 +45,16 @@ class Arg:
     def is_pointer(self):
         return self.teyep.endswith("*")
 
+    def is_string(self):
+        return self.teyep == "const char*"
+
     def cleaned_type(self):
         teyep = self.teyep
-        if self.is_const():
-            teyep = teyep[len("const "):]
-        if self.is_pointer() and "char" not in self.teyep:
-            teyep = teyep[:-1]
+        if not self.is_string():
+            if self.is_const():
+                teyep = teyep[len("const "):]
+            if self.is_pointer():
+                teyep = teyep[:-1]
         return teyep
 
 def parse_arg(line):
@@ -126,11 +130,8 @@ def write_c_file(f, stub_file):
         f.write("    if (%sArgsCount == 64) assert(0);\n" % function.name)
         for arg in function.args:
             rvalue = arg.name
-            if arg.is_pointer():
-                if "char" in arg.teyep:
-                    rvalue = "(char *)" + rvalue
-                else:
-                    rvalue = "*" + rvalue
+            if arg.is_pointer() and not arg.is_string():
+                rvalue = "*" + rvalue
             f.write("    %sArgs[%sArgsCount].%s = %s;\n" % (function.name, function.name, arg.name, rvalue))
         f.write("    %sArgsCount++;\n" % (function.name))
         f.write("    return %sReturn;\n" % (function.name))
