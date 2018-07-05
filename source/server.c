@@ -43,7 +43,7 @@ AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
         return AnhttpErrorSystem;
     }
 
-    if (anhttpCloseListener(listener) != -1) {
+    if (anhttpCloseListener(listener) == -1) {
         anhttpLog("Failed to close listener: %s\n",
                 AnhttpGetSystemError());
     }
