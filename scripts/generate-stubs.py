@@ -94,6 +94,38 @@ def parse_line(line, stub_file):
         fcn = parse_function(line)
         stub_file.add_function(fcn)
 
+def make_function_type_call(function):
+    s = ""
+    s += function.name + "Function"
+    s += "("
+    for i in range(len(function.args)):
+        arg = function.args[i]
+        if i != 0:
+            s += ", "
+        s += arg.name
+    s += ")"
+    return s
+
+def function_type_name(function):
+    return function.name + "Function_t"
+
+def make_function_type(function):
+    s = ""
+    s += function.return_type + " "
+    s += "(*" + function_type_name(function) + ")"
+    if len(function.args) > 0:
+        s += "("
+        for i in range(len(function.args)):
+            arg = function.args[i]
+            if i != 0:
+                s += ", "
+            s += arg.teyep + " " + arg.name
+        s += ")"
+    else:
+        s += "(void)"
+    s += ";"
+    return s
+
 def write_h_file(f, stub_file):
     f.write("#include \"%s\"\n" % (os.path.basename(f.name).replace("_stubs", "")))
     for include in stub_file.includes:
@@ -103,10 +135,12 @@ def write_h_file(f, stub_file):
     state = [] # (variable_name, variable_type)
     for function in stub_file.functions:
         f.write("// %s\n" % (function.name))
+        f.write("typedef %s\n" % make_function_type(function))
         f.write("typedef struct {\n")
         for arg in function.args:
             f.write("    %s %s;\n" % (arg.cleaned_type(), arg.name))
         f.write("} %sArgs_t;\n" % (function.name))
+        f.write("extern %s %sFunction;\n" % (function_type_name(function), function.name))
         f.write("extern %sArgs_t %sArgs[];\n" % (function.name, function.name))
         f.write("extern int %sArgsCount;\n" % (function.name))
         state.append(("%sArgsCount" % (function.name), "int"))
@@ -127,6 +161,7 @@ def write_c_file(f, stub_file):
 
     for function in stub_file.functions:
         f.write("// %s\n" % (function.name))
+        f.write("%s %sFunction = (%s)0;\n" % (function_type_name(function), function.name, function_type_name(function)))
         f.write("%sArgs_t %sArgs[64];\n" % (function.name, function.name))
         f.write("int %sArgsCount = 0;\n" % (function.name))
         f.write("%s %sReturn = (%s)0;\n" % (function.return_type, function.name, function.return_type))
@@ -138,6 +173,7 @@ def write_c_file(f, stub_file):
                 rvalue = "*" + rvalue
             f.write("    %sArgs[%sArgsCount].%s = %s;\n" % (function.name, function.name, arg.name, rvalue))
         f.write("    %sArgsCount++;\n" % (function.name))
+        f.write("    if (%sFunction != (%s)0) %s;\n" % (function.name, function_type_name(function), make_function_type_call(function)))
         f.write("    return %sReturn;\n" % (function.name))
         f.write("}\n")
         f.write("\n")

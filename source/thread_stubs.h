@@ -3,27 +3,33 @@
 #include <pthread.h>
 
 // anhttpThreadRun
+typedef AnhttpError_t (*anhttpThreadRunFunction_t)(anhttpThread_t* thread, anhttpThreadFunction_t function, void* input);
 typedef struct {
     anhttpThread_t thread;
     anhttpThreadFunction_t function;
     void* input;
 } anhttpThreadRunArgs_t;
+extern anhttpThreadRunFunction_t anhttpThreadRunFunction;
 extern anhttpThreadRunArgs_t anhttpThreadRunArgs[];
 extern int anhttpThreadRunArgsCount;
 extern AnhttpError_t anhttpThreadRunReturn;
 
 // anhttpThreadWait
+typedef AnhttpError_t (*anhttpThreadWaitFunction_t)(anhttpThread_t* thread);
 typedef struct {
     anhttpThread_t thread;
 } anhttpThreadWaitArgs_t;
+extern anhttpThreadWaitFunction_t anhttpThreadWaitFunction;
 extern anhttpThreadWaitArgs_t anhttpThreadWaitArgs[];
 extern int anhttpThreadWaitArgsCount;
 extern AnhttpError_t anhttpThreadWaitReturn;
 
 // anhttpThreadCancel
+typedef AnhttpError_t (*anhttpThreadCancelFunction_t)(anhttpThread_t* thread);
 typedef struct {
     anhttpThread_t thread;
 } anhttpThreadCancelArgs_t;
+extern anhttpThreadCancelFunction_t anhttpThreadCancelFunction;
 extern anhttpThreadCancelArgs_t anhttpThreadCancelArgs[];
 extern int anhttpThreadCancelArgsCount;
 extern AnhttpError_t anhttpThreadCancelReturn;

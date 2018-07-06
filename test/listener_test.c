@@ -2,9 +2,11 @@
 
 #include "anhttp/anhttp.h"
 
-#include "source/syscall_stubs.h"
 #include "source/listener.h"
 #include "source/util.h"
+
+#include "source/syscall_stubs.h"
+#include "source/thread_stubs.h"
 
 static void createSuccessTest(void) {
     SYSCALL_STUBS_H_RESET();
@@ -72,11 +74,39 @@ static void createListenFailureTest(void) {
     TEST_ASSERT_EQUAL_INT(5, anhttpCloseArgs[0].fd);
 }
 
+static AnhttpError_t runThreadStub(anhttpThread_t *thread,
+        anhttpThreadFunction_t function,
+        void *input) {
+    function(input);
+    anhttpThreadRunReturn = AnhttpErrorOK;
+    return AnhttpErrorOK;
+}
+
+static int acceptStub(int listener,
+        struct sockaddr *sockAddr,
+        socklen_t *sockAddrLen) {
+    static int call = 0;
+    TEST_ASSERT_EQUAL_INT(5, listener);
+    anhttpAcceptReturn = (call++ == 0 ? 6 : -1);
+    return 0;
+}
+
 static void startSuccessTest(void) {
-    //anhttpThread_t thread;
-    //anhttpConnectionQueue_t connectionQ;
-    //AnhttpError_t error = anhttpStartListener(5, &thread, &connectionQ);
-    //TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK, error);
+    anhttpThreadRunFunction = runThreadStub;
+    anhttpAcceptFunction = acceptStub;
+
+    anhttpThread_t thread;
+
+    anhttpConnectionQueue_t connectionQ;
+    anhttpConnectionQueueInit(&connectionQ);
+
+    AnhttpError_t error = anhttpStartListener(5, &thread, &connectionQ);
+    TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK, error);
+
+    int qLen = 0;
+    TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK,
+            anhttpConnectionQueueLength(&connectionQ, &qLen));
+    TEST_ASSERT_EQUAL_INT(2, qLen);
 }
 
 int main(int argc, char *argv[]) {

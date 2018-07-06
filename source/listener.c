@@ -101,10 +101,13 @@ static void *runListener(void *data) {
         int connSock = anhttpAccept(input->listener,
                 (struct sockaddr *)&sockAddr,
                 &sockAddrLen);
+        anhttpLog("Accepted connection from XXX, connSock = %d\n",
+                connSock);
         if (connSock == -1) {
             anhttpLog("Failure in accept() call: %s\n",
                     AnhttpGetSystemError());
             failListener(input);
+            break;
         }
 
         anhttpConnection_t connection = {
