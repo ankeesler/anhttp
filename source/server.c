@@ -12,6 +12,7 @@
 static void serve(AnhttpServer_t *server,
         anhttpThread_t *listenerThread,
         anhttpConnectionQueue_t *connectionQueue);
+static void handleConnection(AnhttpServer_t *server, int fd);
 
 AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
     if (server->address == NULL) {
@@ -77,6 +78,8 @@ static void serve(AnhttpServer_t *server,
 
         anhttpLogf("Removed connection from connection queue: %d\n", connection.fd);
 
+        handleConnection(server, connection.fd);
+
         if (anhttpClose(connection.fd) == -1) {
             anhttpLogf("Failed to close connection %d: %s\n",
                     connection.fd,
@@ -93,4 +96,17 @@ static void serve(AnhttpServer_t *server,
     } else {
         anhttpLog("Cancelled listener thread\n");
     }
+}
+
+static void handleConnection(AnhttpServer_t *server, int fd) {
+    char buffer[4096];
+    memset(buffer, 0, sizeof(buffer));
+
+    ssize_t readCount = anhttpRead(fd, buffer, sizeof(buffer));
+    anhttpLogf("read %ld bytes\n", readCount);
+    anhttpLogf("Received %s\n", buffer);
+
+    char rsp[] = "helloooooo";
+    ssize_t writeCount = anhttpWrite(fd, rsp, sizeof(rsp));
+    anhttpLogf("wrote %ld bytes\n", writeCount);
 }
