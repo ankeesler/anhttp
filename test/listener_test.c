@@ -7,6 +7,7 @@
 
 #include "source/syscall_stubs.h"
 #include "source/thread_stubs.h"
+#include "source/connection_queue_stubs.h"
 
 static void createSuccessTest(void) {
     SYSCALL_STUBS_H_RESET();
@@ -85,7 +86,6 @@ static int acceptStub(int listener,
         struct sockaddr *sockAddr,
         socklen_t *sockAddrLen) {
     static int call = 0;
-    TEST_ASSERT_EQUAL_INT(5, listener);
     return (call++ == 0 ? 6 : -1);
 }
 
@@ -97,26 +97,18 @@ static void startSuccessTest(void) {
     anhttpThread_t thread;
 
     anhttpConnectionQueue_t connectionQ;
-    anhttpConnectionQueueInit(&connectionQ);
 
     AnhttpError_t error = anhttpStartListener(5, &thread, &connectionQ);
     TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK, error);
 
     TEST_ASSERT_EQUAL_INT(1, anhttpThreadRunArgsCount);
+
     TEST_ASSERT_EQUAL_INT(2, anhttpAcceptArgsCount);
+    TEST_ASSERT_EQUAL_INT(5, anhttpAcceptArgs[0].fd);
 
-    int qLen = 0;
-    TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK,
-            anhttpConnectionQueueLength(&connectionQ, &qLen));
-    TEST_ASSERT_EQUAL_INT(2, qLen);
-
-    anhttpConnection_t connection;
-    TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK, anhttpConnectionQueueRemove(&connectionQ,
-                &connection));
-    TEST_ASSERT_EQUAL_INT(6, connection.fd);
-    TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK, anhttpConnectionQueueRemove(&connectionQ,
-                &connection));
-    TEST_ASSERT_EQUAL_INT(-1, connection.fd);
+    TEST_ASSERT_EQUAL_INT(2, anhttpConnectionQueueAddArgsCount);
+    TEST_ASSERT_EQUAL_INT(6, anhttpConnectionQueueAddArgs[0].connection.fd);
+    TEST_ASSERT_EQUAL_INT(-1, anhttpConnectionQueueAddArgs[1].connection.fd);
 }
 
 static void startThreadFailTest(void) {

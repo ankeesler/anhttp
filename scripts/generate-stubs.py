@@ -2,7 +2,57 @@
 
 import os
 import pprint
+import re
 import sys
+
+class FileParser:
+    """This is the thing that does the parsing of the header file."""
+    def __init__(self, stub_file):
+        self.stub_file = stub_file
+
+    def parse(self, lines):
+        """This function parses the lines of a file and populates its stub_file field."""
+        function_lines = []
+        for line in lines:
+            line = line.strip()
+
+            if len(function_lines) > 0:
+                function_lines.append(line)
+            elif not line.startswith("typedef") and "(" in line:
+                function_lines.append(line)
+            elif line.startswith("#include"):
+                include = line[len("#include "):]
+                self.stub_file.add_include(include)
+
+            if not line.startswith("typedef") and line.endswith(");"):
+                real_line = " ".join(function_lines)
+                m = re.match("(\\w+) (\\w+)\(([a-zA-Z0-9,_ *]+)\);", real_line)
+                if not m:
+                    raise Exception("cannot parse function name out of %s" % (real_line))
+                return_type = m.group(1)
+                name = m.group(2)
+                args = self.__parse_args(m.group(3))
+                function = Function(real_line, name, return_type, args)
+                self.stub_file.add_function(function)
+                function_lines = []
+
+    def __parse_args(self, line):
+        args = []
+        for arg in line.split(","):
+            args.append(self.__parse_arg(arg))
+        return args
+
+    def __parse_arg(self, line):
+        line = line.strip()
+        last_space = line.rfind(" ")
+        if last_space == -1:
+            raise Exception("cannot find space in arg line: %s" % (line))
+        name = line[last_space+1:]
+        teyep = line[:last_space]
+        if name[0] == "*":
+            teyep += "*"
+            name = name[1:]
+        return Arg(teyep, name)
 
 class StubFile:
     def __init__(self):
@@ -60,40 +110,6 @@ class Arg:
                 teyep = teyep[:-1]
         return teyep
 
-def parse_arg(line):
-    line = line.strip()
-    last_space = line.rindex(" ")
-    name = line[last_space+1:]
-    teyep = line[:last_space]
-    if name[0] == "*":
-        teyep += "*"
-        name = name[1:]
-    return Arg(teyep, name)
-
-def parse_args(line):
-    args = []
-    for arg in line.split(","):
-        args.append(parse_arg(arg))
-    return args
-
-def parse_function(line):
-    first_parens = line.index("(")
-    second_parens = line.index(")")
-    space_before_name = line.rindex(" ", 0, first_parens)
-    name = line[space_before_name+1:first_parens]
-    return_type = line[:space_before_name]
-    args = parse_args(line[first_parens+1:second_parens])
-    return Function(line, name, return_type, args)
-
-def parse_line(line, stub_file):
-    line = line.strip()
-    if line.startswith("#include"):
-        include = line[len("#include "):]
-        stub_file.add_include(include)
-    elif ");" in line and not line.startswith("typedef") and not line.startswith("//"):
-        fcn = parse_function(line)
-        stub_file.add_function(fcn)
-
 def make_function_type_call(function):
     s = ""
     s += function.name + "Function"
@@ -145,8 +161,9 @@ def write_h_file(f, stub_file):
         f.write("extern %sArgs_t %sArgs[];\n" % (function.name, function.name))
         f.write("extern int %sArgsCount;\n" % (function.name))
         state.append(("%sArgsCount" % (function.name), "int"))
-        f.write("extern %s %sReturn;\n" % (function.return_type, function.name))
-        state.append(("%sReturn" % (function.name), function.return_type))
+        if function.return_type != "void":
+            f.write("extern %s %sReturn;\n" % (function.return_type, function.name))
+            state.append(("%sReturn" % (function.name), function.return_type))
         f.write("\n")
 
     file_name = os.path.basename(f.name).replace(".", "_").upper()
@@ -165,7 +182,8 @@ def write_c_file(f, stub_file):
         f.write("%s %sFunction = (%s)0;\n" % (function_type_name(function), function.name, function_type_name(function)))
         f.write("%sArgs_t %sArgs[64];\n" % (function.name, function.name))
         f.write("int %sArgsCount = 0;\n" % (function.name))
-        f.write("%s %sReturn = (%s)0;\n" % (function.return_type, function.name, function.return_type))
+        if function.return_type != "void":
+            f.write("%s %sReturn = (%s)0;\n" % (function.return_type, function.name, function.return_type))
         f.write("%s {\n" % (function.line.replace(";", "")))
         f.write("    if (%sArgsCount == 64) assert(0);\n" % function.name)
         for arg in function.args:
@@ -174,8 +192,11 @@ def write_c_file(f, stub_file):
                 rvalue = "*" + rvalue
             f.write("    %sArgs[%sArgsCount].%s = %s;\n" % (function.name, function.name, arg.name, rvalue))
         f.write("    %sArgsCount++;\n" % (function.name))
-        f.write("    if (%sFunction != (%s)0) return %s;\n" % (function.name, function_type_name(function), make_function_type_call(function)))
-        f.write("    return %sReturn;\n" % (function.name))
+        if function.return_type != "void":
+            f.write("    if (%sFunction != (%s)0) return %s;\n" % (function.name, function_type_name(function), make_function_type_call(function)))
+            f.write("    return %sReturn;\n" % (function.name))
+        else:
+            f.write("    if (%sFunction != (%s)0) %s;\n" % (function.name, function_type_name(function), make_function_type_call(function)))
         f.write("}\n")
         f.write("\n")
 
@@ -188,9 +209,13 @@ def main():
     generated_h_file_name = sys.argv[2]
     generated_c_file_name = sys.argv[3]
 
-    stub_file = StubFile()
+    lines = []
     with open(h_file_name) as f:
-        [parse_line(line, stub_file) for line in f]
+        [lines.append(line) for line in f]
+
+    stub_file = StubFile()
+    file_parser = FileParser(stub_file)
+    file_parser.parse(lines)
 
     with open(generated_h_file_name, "w") as f:
         write_h_file(f, stub_file)

@@ -16,7 +16,9 @@ typedef void *(*anhttpThreadFunction_t)(void *);
 
 // Run a function in a thread.
 // Returns whether or not this was successful.
-AnhttpError_t anhttpThreadRun(anhttpThread_t *thread, anhttpThreadFunction_t function, void *input);
+AnhttpError_t anhttpThreadRun(anhttpThread_t *thread,
+        anhttpThreadFunction_t function,
+        void *input);
 
 // Wait for a thread to return.
 AnhttpError_t anhttpThreadWait(anhttpThread_t *thread);
