@@ -6,17 +6,21 @@
 
 #include "source/syscall_stubs.h"
 #include "source/listener_stubs.h"
+#include "source/connection_queue_stubs.h"
+#include "source/thread_stubs.h"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
 
-static void successTest(void) {
+static void basicListeningSuccessTest(void) {
     SYSCALL_STUBS_H_RESET();
     LISTENER_STUBS_H_RESET();
+    CONNECTION_QUEUE_STUBS_H_RESET();
     anhttpCreateListenerReturn = 5;
     anhttpStartListenerReturn = AnhttpErrorOK;
+    anhttpConnectionQueueInitReturn = AnhttpErrorOK;
 
     AnhttpServer_t server;
     memset(&server, 0, sizeof(server));
@@ -28,6 +32,8 @@ static void successTest(void) {
             anhttpCreateListenerArgs[0].address);
     TEST_ASSERT_EQUAL_INT(ANHTTP_SERVER_DEFAULT_PORT,
             anhttpCreateListenerArgs[0].port);
+
+    TEST_ASSERT_EQUAL_INT(1, anhttpConnectionQueueInitArgsCount);
 
     TEST_ASSERT_EQUAL_INT(1, anhttpStartListenerArgsCount);
     TEST_ASSERT_EQUAL_INT(5, anhttpStartListenerArgs[0].listener);
@@ -88,11 +94,47 @@ static void startListenerFailTest(void) {
     TEST_ASSERT_EQUAL_INT(5, anhttpCloseListenerArgs[0].listener);
 }
 
+static AnhttpError_t connectionQueueRemoveFunction(anhttpConnectionQueue_t *q,
+        anhttpConnection_t *connection) {
+    static int call = 0;
+    connection->fd = call + 6;
+    return (call++ < 3 ? AnhttpErrorOK : AnhttpErrorSystem);
+}
+
+static void basicServingSuccessTest(void) {
+    SYSCALL_STUBS_H_RESET();
+    LISTENER_STUBS_H_RESET();
+    CONNECTION_QUEUE_STUBS_H_RESET();
+    THREAD_STUBS_H_RESET();
+    anhttpCreateListenerReturn = 5;
+    anhttpStartListenerReturn = AnhttpErrorOK;
+    anhttpConnectionQueueRemoveFunction = connectionQueueRemoveFunction;
+    anhttpConnectionQueueInitReturn = AnhttpErrorOK;
+
+    AnhttpServer_t server;
+    memset(&server, 0, sizeof(server));
+    AnhttpError_t error = AnhttpListenAndServe(&server);
+    TEST_ASSERT_EQUAL(AnhttpErrorOK, error);
+
+    TEST_ASSERT_EQUAL_INT(3, anhttpCloseArgsCount);
+    TEST_ASSERT_EQUAL_INT(6, anhttpCloseArgs[0].fd);
+    TEST_ASSERT_EQUAL_INT(7, anhttpCloseArgs[1].fd);
+    TEST_ASSERT_EQUAL_INT(8, anhttpCloseArgs[2].fd);
+
+    TEST_ASSERT_EQUAL_INT(1, anhttpThreadCancelArgsCount);
+}
+
 int main(int argc, char *argv[]) {
     UNITY_BEGIN();
-    RUN_TEST(successTest);
+
+    // Listening
+    RUN_TEST(basicListeningSuccessTest);
     RUN_TEST(nonDefaultAddressTest);
     RUN_TEST(createListenerFailTest);
     RUN_TEST(startListenerFailTest);
+
+    // Serving
+    RUN_TEST(basicServingSuccessTest);
+
     return UNITY_END();
 }

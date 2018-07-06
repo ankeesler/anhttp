@@ -7,6 +7,7 @@ int anhttpLog(const char *format, ...) {
 
     printf("[anhttp]: ");
     int printed = vprintf(format, args);
+    fflush(stdout);
 
     va_end(args);
 

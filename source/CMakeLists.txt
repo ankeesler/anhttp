@@ -1,3 +1,6 @@
 include_directories("${PROJECT_SOURCE_DIR}/include")
 add_library(anhttp
-    error.c server.c list.c syscall.c log.c listener.c util.c)
+    syscall.c thread.c
+    error.c list.c log.c util.c connection_queue.c
+    listener.c
+    server.c)

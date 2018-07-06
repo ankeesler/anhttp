@@ -68,11 +68,10 @@ int anhttpCloseListener(int listener) {
 AnhttpError_t anhttpStartListener(int listener,
         anhttpThread_t *thread,
         anhttpConnectionQueue_t *connectionQ) {
-    runListenerInput_t input = {
-        .mark = RUN_LISTENER_INPUT_MARK,
-        .listener = listener,
-        .connectionQ = connectionQ,
-    };
+    static runListenerInput_t input;
+    input.mark = RUN_LISTENER_INPUT_MARK;
+    input.listener = listener;
+    input.connectionQ = connectionQ;
     return anhttpThreadRun(thread, runListener, &input);
 }
 
@@ -95,20 +94,22 @@ static void *runListener(void *data) {
         return NULL;
     }
 
+    anhttpLog("Running listener on fd %d\n", input->listener);
     while (1) {
         struct sockaddr_in sockAddr;
         socklen_t sockAddrLen;
         int connSock = anhttpAccept(input->listener,
                 (struct sockaddr *)&sockAddr,
                 &sockAddrLen);
-        anhttpLog("Accepted connection from XXX, connSock = %d\n",
-                connSock);
         if (connSock == -1) {
             anhttpLog("Failure in accept() call: %s\n",
                     AnhttpGetSystemError());
             failListener(input);
             break;
         }
+
+        anhttpLog("Accepted connection from XXX, connSock = %d\n",
+                connSock);
 
         anhttpConnection_t connection = {
             .fd = connSock,

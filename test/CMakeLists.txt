@@ -8,6 +8,8 @@ add_executable(server_test
     "${PROJECT_SOURCE_DIR}/source/server.c"
     "${PROJECT_SOURCE_DIR}/source/log.c"
     "${PROJECT_SOURCE_DIR}/source/syscall_stubs.c"
+    "${PROJECT_SOURCE_DIR}/source/thread_stubs.c"
+    "${PROJECT_SOURCE_DIR}/source/connection_queue_stubs.c"
     "${PROJECT_SOURCE_DIR}/source/listener_stubs.c")
 target_link_libraries(server_test unity)
 
