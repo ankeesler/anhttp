@@ -13,7 +13,7 @@ int anhttpSocket(int domain, int type, int protocol) {
     anhttpSocketArgs[anhttpSocketArgsCount].type = type;
     anhttpSocketArgs[anhttpSocketArgsCount].protocol = protocol;
     anhttpSocketArgsCount++;
-    if (anhttpSocketFunction != (anhttpSocketFunction_t)0) anhttpSocketFunction(domain, type, protocol);
+    if (anhttpSocketFunction != (anhttpSocketFunction_t)0) return anhttpSocketFunction(domain, type, protocol);
     return anhttpSocketReturn;
 }
 
@@ -27,7 +27,7 @@ int anhttpListen(int socket, int backlog) {
     anhttpListenArgs[anhttpListenArgsCount].socket = socket;
     anhttpListenArgs[anhttpListenArgsCount].backlog = backlog;
     anhttpListenArgsCount++;
-    if (anhttpListenFunction != (anhttpListenFunction_t)0) anhttpListenFunction(socket, backlog);
+    if (anhttpListenFunction != (anhttpListenFunction_t)0) return anhttpListenFunction(socket, backlog);
     return anhttpListenReturn;
 }
 
@@ -40,7 +40,7 @@ int anhttpClose(int fd) {
     if (anhttpCloseArgsCount == 64) assert(0);
     anhttpCloseArgs[anhttpCloseArgsCount].fd = fd;
     anhttpCloseArgsCount++;
-    if (anhttpCloseFunction != (anhttpCloseFunction_t)0) anhttpCloseFunction(fd);
+    if (anhttpCloseFunction != (anhttpCloseFunction_t)0) return anhttpCloseFunction(fd);
     return anhttpCloseReturn;
 }
 
@@ -55,7 +55,7 @@ int anhttpAccept(int fd, struct sockaddr *address, socklen_t *address_len) {
     anhttpAcceptArgs[anhttpAcceptArgsCount].address = *address;
     anhttpAcceptArgs[anhttpAcceptArgsCount].address_len = *address_len;
     anhttpAcceptArgsCount++;
-    if (anhttpAcceptFunction != (anhttpAcceptFunction_t)0) anhttpAcceptFunction(fd, address, address_len);
+    if (anhttpAcceptFunction != (anhttpAcceptFunction_t)0) return anhttpAcceptFunction(fd, address, address_len);
     return anhttpAcceptReturn;
 }
 
@@ -70,7 +70,7 @@ int anhttpBind(int socket, const struct sockaddr *address, socklen_t address_len
     anhttpBindArgs[anhttpBindArgsCount].address = *address;
     anhttpBindArgs[anhttpBindArgsCount].address_len = address_len;
     anhttpBindArgsCount++;
-    if (anhttpBindFunction != (anhttpBindFunction_t)0) anhttpBindFunction(socket, address, address_len);
+    if (anhttpBindFunction != (anhttpBindFunction_t)0) return anhttpBindFunction(socket, address, address_len);
     return anhttpBindReturn;
 }
 

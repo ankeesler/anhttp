@@ -12,7 +12,7 @@ int anhttpCreateListener(const char *address, int port) {
     anhttpCreateListenerArgs[anhttpCreateListenerArgsCount].address = address;
     anhttpCreateListenerArgs[anhttpCreateListenerArgsCount].port = port;
     anhttpCreateListenerArgsCount++;
-    if (anhttpCreateListenerFunction != (anhttpCreateListenerFunction_t)0) anhttpCreateListenerFunction(address, port);
+    if (anhttpCreateListenerFunction != (anhttpCreateListenerFunction_t)0) return anhttpCreateListenerFunction(address, port);
     return anhttpCreateListenerReturn;
 }
 
@@ -25,7 +25,7 @@ int anhttpCloseListener(int listener) {
     if (anhttpCloseListenerArgsCount == 64) assert(0);
     anhttpCloseListenerArgs[anhttpCloseListenerArgsCount].listener = listener;
     anhttpCloseListenerArgsCount++;
-    if (anhttpCloseListenerFunction != (anhttpCloseListenerFunction_t)0) anhttpCloseListenerFunction(listener);
+    if (anhttpCloseListenerFunction != (anhttpCloseListenerFunction_t)0) return anhttpCloseListenerFunction(listener);
     return anhttpCloseListenerReturn;
 }
 
@@ -40,7 +40,7 @@ AnhttpError_t anhttpStartListener(int listener, anhttpThread_t *thread, anhttpCo
     anhttpStartListenerArgs[anhttpStartListenerArgsCount].thread = *thread;
     anhttpStartListenerArgs[anhttpStartListenerArgsCount].connectionQ = *connectionQ;
     anhttpStartListenerArgsCount++;
-    if (anhttpStartListenerFunction != (anhttpStartListenerFunction_t)0) anhttpStartListenerFunction(listener, thread, connectionQ);
+    if (anhttpStartListenerFunction != (anhttpStartListenerFunction_t)0) return anhttpStartListenerFunction(listener, thread, connectionQ);
     return anhttpStartListenerReturn;
 }
 

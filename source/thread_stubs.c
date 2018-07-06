@@ -13,7 +13,7 @@ AnhttpError_t anhttpThreadRun(anhttpThread_t *thread, anhttpThreadFunction_t fun
     anhttpThreadRunArgs[anhttpThreadRunArgsCount].function = function;
     anhttpThreadRunArgs[anhttpThreadRunArgsCount].input = input;
     anhttpThreadRunArgsCount++;
-    if (anhttpThreadRunFunction != (anhttpThreadRunFunction_t)0) anhttpThreadRunFunction(thread, function, input);
+    if (anhttpThreadRunFunction != (anhttpThreadRunFunction_t)0) return anhttpThreadRunFunction(thread, function, input);
     return anhttpThreadRunReturn;
 }
 
@@ -26,7 +26,7 @@ AnhttpError_t anhttpThreadWait(anhttpThread_t *thread) {
     if (anhttpThreadWaitArgsCount == 64) assert(0);
     anhttpThreadWaitArgs[anhttpThreadWaitArgsCount].thread = *thread;
     anhttpThreadWaitArgsCount++;
-    if (anhttpThreadWaitFunction != (anhttpThreadWaitFunction_t)0) anhttpThreadWaitFunction(thread);
+    if (anhttpThreadWaitFunction != (anhttpThreadWaitFunction_t)0) return anhttpThreadWaitFunction(thread);
     return anhttpThreadWaitReturn;
 }
 
@@ -39,7 +39,7 @@ AnhttpError_t anhttpThreadCancel(anhttpThread_t *thread) {
     if (anhttpThreadCancelArgsCount == 64) assert(0);
     anhttpThreadCancelArgs[anhttpThreadCancelArgsCount].thread = *thread;
     anhttpThreadCancelArgsCount++;
-    if (anhttpThreadCancelFunction != (anhttpThreadCancelFunction_t)0) anhttpThreadCancelFunction(thread);
+    if (anhttpThreadCancelFunction != (anhttpThreadCancelFunction_t)0) return anhttpThreadCancelFunction(thread);
     return anhttpThreadCancelReturn;
 }
 

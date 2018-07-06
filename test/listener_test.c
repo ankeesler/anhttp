@@ -78,7 +78,6 @@ static AnhttpError_t runThreadStub(anhttpThread_t *thread,
         anhttpThreadFunction_t function,
         void *input) {
     function(input);
-    anhttpThreadRunReturn = AnhttpErrorOK;
     return AnhttpErrorOK;
 }
 
@@ -87,8 +86,7 @@ static int acceptStub(int listener,
         socklen_t *sockAddrLen) {
     static int call = 0;
     TEST_ASSERT_EQUAL_INT(5, listener);
-    anhttpAcceptReturn = (call++ == 0 ? 6 : -1);
-    return 0;
+    return (call++ == 0 ? 6 : -1);
 }
 
 static void startSuccessTest(void) {
@@ -103,10 +101,21 @@ static void startSuccessTest(void) {
     AnhttpError_t error = anhttpStartListener(5, &thread, &connectionQ);
     TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK, error);
 
+    TEST_ASSERT_EQUAL_INT(1, anhttpThreadRunArgsCount);
+    TEST_ASSERT_EQUAL_INT(2, anhttpAcceptArgsCount);
+
     int qLen = 0;
     TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK,
             anhttpConnectionQueueLength(&connectionQ, &qLen));
     TEST_ASSERT_EQUAL_INT(2, qLen);
+
+    anhttpConnection_t connection;
+    TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK, anhttpConnectionQueueRemove(&connectionQ,
+                &connection));
+    TEST_ASSERT_EQUAL_INT(6, connection.fd);
+    TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK, anhttpConnectionQueueRemove(&connectionQ,
+                &connection));
+    TEST_ASSERT_EQUAL_INT(-1, connection.fd);
 }
 
 int main(int argc, char *argv[]) {

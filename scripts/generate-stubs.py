@@ -173,7 +173,7 @@ def write_c_file(f, stub_file):
                 rvalue = "*" + rvalue
             f.write("    %sArgs[%sArgsCount].%s = %s;\n" % (function.name, function.name, arg.name, rvalue))
         f.write("    %sArgsCount++;\n" % (function.name))
-        f.write("    if (%sFunction != (%s)0) %s;\n" % (function.name, function_type_name(function), make_function_type_call(function)))
+        f.write("    if (%sFunction != (%s)0) return %s;\n" % (function.name, function_type_name(function), make_function_type_call(function)))
         f.write("    return %sReturn;\n" % (function.name))
         f.write("}\n")
         f.write("\n")
