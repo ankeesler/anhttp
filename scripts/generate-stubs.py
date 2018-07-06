@@ -96,7 +96,7 @@ def write_h_file(f, stub_file):
         f.write("#include %s\n" % (include))
     f.write("\n")
 
-    state = []
+    state = [] # (variable_name, variable_type)
     for function in stub_file.functions:
         f.write("// %s\n" % (function.name))
         f.write("typedef struct {\n")
@@ -105,14 +105,14 @@ def write_h_file(f, stub_file):
         f.write("} %sArgs_t;\n" % (function.name))
         f.write("extern %sArgs_t %sArgs[];\n" % (function.name, function.name))
         f.write("extern int %sArgsCount;\n" % (function.name))
-        state.append("%sArgsCount" % (function.name))
-        f.write("extern int %sReturn;\n" % (function.name))
-        state.append("%sReturn" % (function.name))
+        state.append(("%sArgsCount" % (function.name), "int"))
+        f.write("extern %s %sReturn;\n" % (function.return_type, function.name))
+        state.append(("%sReturn" % (function.name), function.return_type))
         f.write("\n")
 
     file_name = os.path.basename(f.name).replace(".", "_").upper()
     f.write("#define %s_RESET() \\\n" % file_name)
-    [f.write("    %s = 0; \\\n" % (s)) for s in state]
+    [f.write("    %s = (%s)0; \\\n" % (s[0], s[1])) for s in state]
 
 def write_c_file(f, stub_file):
     h_file_name = os.path.basename(f.name).replace(".c", ".h")
@@ -125,7 +125,7 @@ def write_c_file(f, stub_file):
         f.write("// %s\n" % (function.name))
         f.write("%sArgs_t %sArgs[64];\n" % (function.name, function.name))
         f.write("int %sArgsCount = 0;\n" % (function.name))
-        f.write("int %sReturn = 0;\n" % (function.name))
+        f.write("%s %sReturn = (%s)0;\n" % (function.return_type, function.name, function.return_type))
         f.write("%s {\n" % (function.line.replace(";", "")))
         f.write("    if (%sArgsCount == 64) assert(0);\n" % function.name)
         for arg in function.args:

@@ -17,4 +17,4 @@ int anhttpCloseListener(int listener);
 // The listener thread will write connections to the connectionQ.
 // If the listener falls over, it will write a -1 fd to the connectionQ.
 // Returns an error indicating whether or not the listener was started successfully.
-//AnhttpError_t anhttpStartListener(int listener, anhttpThread_t *thread, anhttpConnectionQueue_t *connectionQ);
+AnhttpError_t anhttpStartListener(int listener, anhttpThread_t *thread, anhttpConnectionQueue_t *connectionQ);

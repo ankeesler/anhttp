@@ -19,8 +19,20 @@ extern anhttpCloseListenerArgs_t anhttpCloseListenerArgs[];
 extern int anhttpCloseListenerArgsCount;
 extern int anhttpCloseListenerReturn;
 
+// anhttpStartListener
+typedef struct {
+    int listener;
+    anhttpThread_t thread;
+    anhttpConnectionQueue_t connectionQ;
+} anhttpStartListenerArgs_t;
+extern anhttpStartListenerArgs_t anhttpStartListenerArgs[];
+extern int anhttpStartListenerArgsCount;
+extern AnhttpError_t anhttpStartListenerReturn;
+
 #define LISTENER_STUBS_H_RESET() \
-    anhttpCreateListenerArgsCount = 0; \
-    anhttpCreateListenerReturn = 0; \
-    anhttpCloseListenerArgsCount = 0; \
-    anhttpCloseListenerReturn = 0; \
+    anhttpCreateListenerArgsCount = (int)0; \
+    anhttpCreateListenerReturn = (int)0; \
+    anhttpCloseListenerArgsCount = (int)0; \
+    anhttpCloseListenerReturn = (int)0; \
+    anhttpStartListenerArgsCount = (int)0; \
+    anhttpStartListenerReturn = (AnhttpError_t)0; \
