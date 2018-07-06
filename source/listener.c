@@ -36,7 +36,7 @@ int anhttpCreateListener(const char *address, int port) {
 
     int listenSock = anhttpSocket(AF_INET, SOCK_STREAM, 0);
     if (listenSock == -1) {
-        anhttpLog("Failed to create listen socket\n");
+        anhttpLogf("Failed to create listen socket: %s\n", AnhttpGetSystemError());
         return -1;
     }
 
@@ -44,7 +44,7 @@ int anhttpCreateListener(const char *address, int port) {
             (const struct sockaddr *)&listenSockAddr,
             sizeof(listenSockAddr));
     if (err == -1) {
-        anhttpLog("Failed to bind socket to address: %s\n",
+        anhttpLogf("Failed to bind socket to address: %s\n",
                 AnhttpGetSystemError());
         tryClose(listenSock);
         return -1;
@@ -52,7 +52,7 @@ int anhttpCreateListener(const char *address, int port) {
 
     err = anhttpListen(listenSock, 0);
     if (err == -1) {
-        anhttpLog("Failed to listen on socket: %s\n",
+        anhttpLogf("Failed to listen on socket: %s\n",
                 AnhttpGetSystemError());
         tryClose(listenSock);
         return -1;
@@ -77,7 +77,7 @@ AnhttpError_t anhttpStartListener(int listener,
 
 static void tryClose(int fd) {
     if (anhttpCloseListener(fd) != -1) {
-        anhttpLog("Failed to close fd %d: %s\n",
+        anhttpLogf("Failed to close fd %d: %s\n",
                 fd,
                 AnhttpGetSystemError());
     }
@@ -87,14 +87,14 @@ static void *runListener(void *data) {
     runListenerInput_t *input = (runListenerInput_t *)data;
 
     if (input->mark != RUN_LISTENER_INPUT_MARK) {
-        anhttpLog("Expected 0x%08X run listener mark, got 0x%08X\n",
+        anhttpLogf("Expected 0x%08X run listener mark, got 0x%08X\n",
                 RUN_LISTENER_INPUT_MARK,
                 input->mark);
         failListener(input);
         return NULL;
     }
 
-    anhttpLog("Running listener on fd %d\n", input->listener);
+    anhttpLogf("Running listener on fd %d\n", input->listener);
     while (1) {
         struct sockaddr_in sockAddr;
         socklen_t sockAddrLen;
@@ -102,13 +102,13 @@ static void *runListener(void *data) {
                 (struct sockaddr *)&sockAddr,
                 &sockAddrLen);
         if (connSock == -1) {
-            anhttpLog("Failure in accept() call: %s\n",
+            anhttpLogf("Failure in accept() call: %s\n",
                     AnhttpGetSystemError());
             failListener(input);
             break;
         }
 
-        anhttpLog("Accepted connection from XXX, connSock = %d\n",
+        anhttpLogf("Accepted connection from XXX, connSock = %d\n",
                 connSock);
 
         anhttpConnection_t connection = {
@@ -117,9 +117,10 @@ static void *runListener(void *data) {
         AnhttpError_t error
             = anhttpConnectionQueueAdd(input->connectionQ, &connection);
         if (error != AnhttpErrorOK) {
-            anhttpLog("Failed to write fd %d to connection queue\n",
+            anhttpLogf("Failed to write fd %d to connection queue\n",
                     connSock);
         }
+        anhttpLogf("Added connection %d to queue\n", connection.fd);
     }
 
     return NULL;
@@ -132,6 +133,8 @@ static void failListener(runListenerInput_t *input) {
     AnhttpError_t error = anhttpConnectionQueueAdd(input->connectionQ,
             &failure);
     if (error != AnhttpErrorOK) {
-        anhttpLog("Failed to write failure to connection queue\n");
+        anhttpLogf("Failed to write failure to connection queue: %s (maybe %s)\n",
+                error,
+                AnhttpGetSystemError());
     }
 }

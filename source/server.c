@@ -26,14 +26,14 @@ AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
     if (listener == -1) {
         return AnhttpErrorSystem;
     }
-    anhttpLog("Server created listener %d\n", listener);
+    anhttpLogf("Server created listener %d\n", listener);
 
     anhttpThread_t listenerThread;
 
     anhttpConnectionQueue_t connectionQ;
     AnhttpError_t error = anhttpConnectionQueueInit(&connectionQ);
     if (error != AnhttpErrorOK) {
-        anhttpLog("Failed to initialize connection queue: %s\n",
+        anhttpLogf("Failed to initialize connection queue: %s\n",
                 AnhttpGetSystemError());
         return AnhttpErrorSystem;
     }
@@ -41,21 +41,21 @@ AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
 
     error = anhttpStartListener(listener, &listenerThread, &connectionQ);
     if (error != AnhttpErrorOK) {
-        anhttpLog("Failed to start listener: %s\n", AnhttpGetSystemError());
+        anhttpLogf("Failed to start listener: %s\n", AnhttpGetSystemError());
         if (anhttpCloseListener(listener) == -1) {
-            anhttpLog("Failed to close listener: %s\n", AnhttpGetSystemError());
+            anhttpLogf("Failed to close listener: %s\n", AnhttpGetSystemError());
         }
         return AnhttpErrorSystem;
     }
-    anhttpLog("Server started listener %d\n", listener);
+    anhttpLogf("Server started listener %d\n", listener);
 
     serve(server, &listenerThread, &connectionQ);
 
     if (anhttpCloseListener(listener) == -1) {
-        anhttpLog("Failed to close listener: %s\n",
+        anhttpLogf("Failed to close listener: %s\n",
                 AnhttpGetSystemError());
     } else {
-        anhttpLog("Closed listener %d\n", listener);
+        anhttpLogf("Closed listener %d\n", listener);
     }
 
     anhttpLog("Server exiting\n");
@@ -69,26 +69,26 @@ static void serve(AnhttpServer_t *server,
         anhttpConnection_t connection;
         AnhttpError_t error = anhttpConnectionQueueRemove(connectionQ, &connection);
         if (error != AnhttpErrorOK) {
-            anhttpLog("Failed to removed from connection queue: %s (maybe: %s)\n",
+            anhttpLogf("Failed to removed from connection queue: %s (maybe: %s)\n",
                     error,
                     AnhttpGetSystemError());
             break;
         }
 
-        anhttpLog("Removed connection from connection queue: %d\n", connection.fd);
+        anhttpLogf("Removed connection from connection queue: %d\n", connection.fd);
 
         if (anhttpClose(connection.fd) == -1) {
-            anhttpLog("Failed to close connection %d: %s\n",
+            anhttpLogf("Failed to close connection %d: %s\n",
                     connection.fd,
                     AnhttpGetSystemError());
         } else {
-            anhttpLog("Closing connection fd %d\n", connection.fd);
+            anhttpLogf("Closing connection fd %d\n", connection.fd);
         }
     }
 
     AnhttpError_t error = anhttpThreadCancel(listenerThread);
     if (error != AnhttpErrorOK) {
-        anhttpLog("Failed to cancel listener thread: %s\n",
+        anhttpLogf("Failed to cancel listener thread: %s\n",
                 AnhttpGetSystemError());
     } else {
         anhttpLog("Cancelled listener thread\n");
