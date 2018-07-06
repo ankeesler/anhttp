@@ -5,13 +5,25 @@
 #include "syscall.h"
 #include "log.h"
 #include "util.h"
+#include "thread.h"
+#include "connection_queue.h"
 
 #include <sys/socket.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+#define RUN_LISTENER_INPUT_MARK 0xAC12ACAB
+
+typedef struct {
+    int mark;
+    int listener;
+    anhttpConnectionQueue_t *connectionQ;
+} runListenerInput_t;
+
 static void tryClose(int fd);
+static void *runListener(void *);
+static void failListener(runListenerInput_t *input);
 
 int anhttpCreateListener(const char *address, int port) {
     struct sockaddr_in listenSockAddr;
@@ -53,10 +65,69 @@ int anhttpCloseListener(int listener) {
     return anhttpClose(listener);
 }
 
+AnhttpError_t anhttpStartListener(int listener,
+        anhttpThread_t *thread,
+        anhttpConnectionQueue_t *connectionQ) {
+    runListenerInput_t input = {
+        .mark = RUN_LISTENER_INPUT_MARK,
+        .listener = listener,
+        .connectionQ = connectionQ,
+    };
+    return anhttpThreadRun(thread, runListener, &input);
+}
+
 static void tryClose(int fd) {
     if (anhttpCloseListener(fd) != -1) {
         anhttpLog("Failed to close fd %d: %s\n",
                 fd,
                 AnhttpGetSystemError());
+    }
+}
+
+static void *runListener(void *data) {
+    runListenerInput_t *input = (runListenerInput_t *)data;
+
+    if (input->mark != RUN_LISTENER_INPUT_MARK) {
+        anhttpLog("Expected 0x%08X run listener mark, got 0x%08X\n",
+                RUN_LISTENER_INPUT_MARK,
+                input->mark);
+        failListener(input);
+        return NULL;
+    }
+
+    while (1) {
+        struct sockaddr_in sockAddr;
+        socklen_t sockAddrLen;
+        int connSock = anhttpAccept(input->listener,
+                (struct sockaddr *)&sockAddr,
+                &sockAddrLen);
+        if (connSock == -1) {
+            anhttpLog("Failure in accept() call: %s\n",
+                    AnhttpGetSystemError());
+            failListener(input);
+        }
+
+        anhttpConnection_t connection = {
+            .fd = connSock,
+        };
+        AnhttpError_t error
+            = anhttpConnectionQueueAdd(input->connectionQ, &connection);
+        if (error != AnhttpErrorOK) {
+            anhttpLog("Failed to write fd %d to connection queue\n",
+                    connSock);
+        }
+    }
+
+    return NULL;
+}
+
+static void failListener(runListenerInput_t *input) {
+    anhttpConnection_t failure = {
+        .fd = -1,
+    };
+    AnhttpError_t error = anhttpConnectionQueueAdd(input->connectionQ,
+            &failure);
+    if (error != AnhttpErrorOK) {
+        anhttpLog("Failed to write failure to connection queue\n");
     }
 }

@@ -6,7 +6,7 @@
 #include "source/listener.h"
 #include "source/util.h"
 
-static void successTest(void) {
+static void createSuccessTest(void) {
     SYSCALL_STUBS_H_RESET();
     anhttpSocketReturn = 5;
     anhttpAcceptReturn = 6;
@@ -40,7 +40,7 @@ static void successTest(void) {
     TEST_ASSERT_EQUAL_INT(0, anhttpCloseArgsCount);
 }
 
-static void socketFailureTest(void) {
+static void createSocketFailureTest(void) {
     SYSCALL_STUBS_H_RESET();
     anhttpSocketReturn = -1;
 
@@ -48,7 +48,7 @@ static void socketFailureTest(void) {
     TEST_ASSERT_EQUAL_INT(-1, listener);
 }
 
-static void bindFailureTest(void) {
+static void createBindFailureTest(void) {
     SYSCALL_STUBS_H_RESET();
     anhttpSocketReturn = 5;
     anhttpBindReturn = -1;
@@ -60,7 +60,7 @@ static void bindFailureTest(void) {
     TEST_ASSERT_EQUAL_INT(5, anhttpCloseArgs[0].fd);
 }
 
-static void listenFailureTest(void) {
+static void createListenFailureTest(void) {
     SYSCALL_STUBS_H_RESET();
     anhttpSocketReturn = 5;
     anhttpListenReturn = -1;
@@ -72,11 +72,22 @@ static void listenFailureTest(void) {
     TEST_ASSERT_EQUAL_INT(5, anhttpCloseArgs[0].fd);
 }
 
+static void startSuccessTest(void) {
+    //anhttpThread_t thread;
+    //anhttpConnectionQueue_t connectionQ;
+    //AnhttpError_t error = anhttpStartListener(5, &thread, &connectionQ);
+    //TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK, error);
+}
+
 int main(int argc, char *argv[]) {
     UNITY_BEGIN();
-    RUN_TEST(successTest);
-    RUN_TEST(socketFailureTest);
-    RUN_TEST(bindFailureTest);
-    RUN_TEST(listenFailureTest);
+
+    RUN_TEST(createSuccessTest);
+    RUN_TEST(createSocketFailureTest);
+    RUN_TEST(createBindFailureTest);
+    RUN_TEST(createListenFailureTest);
+
+    RUN_TEST(startSuccessTest);
+
     return UNITY_END();
 }

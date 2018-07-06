@@ -1,3 +1,6 @@
+#ifndef __CONNECTION_QUEUE_H__
+#define __CONNECTION_QUEUE_H__
+
 // This is a thread-safe, blocking queue that contains connections
 // established by a listener.
 
@@ -41,3 +44,5 @@ AnhttpError_t anhttpConnectionQueueRemove(anhttpConnectionQueue_t *q,
 // Writes the length to the provided length pointer.
 AnhttpError_t anhttpConnectionQueueLength(anhttpConnectionQueue_t *q,
         int *length);
+
+#endif // ifdef __CONNECTION_QUEUE_H__

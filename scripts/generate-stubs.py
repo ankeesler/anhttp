@@ -48,9 +48,12 @@ class Arg:
     def is_string(self):
         return self.teyep == "const char*"
 
+    def is_voidstar(self):
+        return self.teyep == "void*"
+
     def cleaned_type(self):
         teyep = self.teyep
-        if not self.is_string():
+        if not self.is_string() and not self.is_voidstar():
             if self.is_const():
                 teyep = teyep[len("const "):]
             if self.is_pointer():
@@ -87,11 +90,12 @@ def parse_line(line, stub_file):
     if line.startswith("#include"):
         include = line[len("#include "):]
         stub_file.add_include(include)
-    elif ");" in line and not line.startswith("//"):
+    elif ");" in line and not line.startswith("typedef") and not line.startswith("//"):
         fcn = parse_function(line)
         stub_file.add_function(fcn)
 
 def write_h_file(f, stub_file):
+    f.write("#include \"%s\"\n" % (os.path.basename(f.name).replace("_stubs", "")))
     for include in stub_file.includes:
         f.write("#include %s\n" % (include))
     f.write("\n")
@@ -130,7 +134,7 @@ def write_c_file(f, stub_file):
         f.write("    if (%sArgsCount == 64) assert(0);\n" % function.name)
         for arg in function.args:
             rvalue = arg.name
-            if arg.is_pointer() and not arg.is_string():
+            if arg.is_pointer() and not arg.is_string() and not arg.is_voidstar():
                 rvalue = "*" + rvalue
             f.write("    %sArgs[%sArgsCount].%s = %s;\n" % (function.name, function.name, arg.name, rvalue))
         f.write("    %sArgsCount++;\n" % (function.name))
