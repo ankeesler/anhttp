@@ -16,6 +16,7 @@ static void successTest(void) {
     SYSCALL_STUBS_H_RESET();
     LISTENER_STUBS_H_RESET();
     anhttpCreateListenerReturn = 5;
+    anhttpStartListenerReturn = AnhttpErrorOK;
 
     AnhttpServer_t server;
     memset(&server, 0, sizeof(server));
@@ -28,6 +29,9 @@ static void successTest(void) {
     TEST_ASSERT_EQUAL_INT(ANHTTP_SERVER_DEFAULT_PORT,
             anhttpCreateListenerArgs[0].port);
 
+    TEST_ASSERT_EQUAL_INT(1, anhttpStartListenerArgsCount);
+    TEST_ASSERT_EQUAL_INT(5, anhttpStartListenerArgs[0].listener);
+
     TEST_ASSERT_EQUAL_INT(1, anhttpCloseListenerArgsCount);
     TEST_ASSERT_EQUAL_INT(5, anhttpCloseListenerArgs[0].listener);
 }
@@ -36,6 +40,7 @@ static void nonDefaultAddressTest(void) {
     SYSCALL_STUBS_H_RESET();
     LISTENER_STUBS_H_RESET();
     anhttpCreateListenerReturn = 5;
+    anhttpStartListenerReturn = AnhttpErrorOK;
 
     AnhttpServer_t server;
     memset(&server, 0, sizeof(server));
@@ -50,8 +55,8 @@ static void nonDefaultAddressTest(void) {
     TEST_ASSERT_EQUAL_INT(4477,
             anhttpCreateListenerArgs[0].port);
 
-    TEST_ASSERT_EQUAL_INT(1, anhttpAcceptArgsCount);
-    TEST_ASSERT_EQUAL_INT(5, anhttpAcceptArgs[0].fd);
+    TEST_ASSERT_EQUAL_INT(1, anhttpStartListenerArgsCount);
+    TEST_ASSERT_EQUAL_INT(5, anhttpStartListenerArgs[0].listener);
 
     TEST_ASSERT_EQUAL_INT(1, anhttpCloseListenerArgsCount);
     TEST_ASSERT_EQUAL_INT(5, anhttpCloseListenerArgs[0].listener);
@@ -68,10 +73,26 @@ static void createListenerFailTest(void) {
     TEST_ASSERT_EQUAL_STRING(AnhttpErrorSystem, error);
 }
 
+static void startListenerFailTest(void) {
+    SYSCALL_STUBS_H_RESET();
+    LISTENER_STUBS_H_RESET();
+    anhttpCreateListenerReturn = 5;
+    anhttpStartListenerReturn = AnhttpErrorSystem;
+
+    AnhttpServer_t server;
+    memset(&server, 0, sizeof(server));
+    AnhttpError_t error = AnhttpListenAndServe(&server);
+    TEST_ASSERT_EQUAL(AnhttpErrorSystem, error);
+
+    TEST_ASSERT_EQUAL_INT(1, anhttpCloseListenerArgsCount);
+    TEST_ASSERT_EQUAL_INT(5, anhttpCloseListenerArgs[0].listener);
+}
+
 int main(int argc, char *argv[]) {
     UNITY_BEGIN();
     RUN_TEST(successTest);
     RUN_TEST(nonDefaultAddressTest);
     RUN_TEST(createListenerFailTest);
+    RUN_TEST(startListenerFailTest);
     return UNITY_END();
 }

@@ -9,14 +9,6 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-static void tryClose(int fd) {
-    int err = anhttpClose(fd);
-    if (err == -1) {
-        anhttpLog("Failed to close fd %d: %s\n",
-                AnhttpGetSystemError());
-    }
-}
-
 AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
     if (server->address == NULL) {
         server->address = ANHTTP_SERVER_DEFAULT_ADDRESS;
@@ -31,15 +23,16 @@ AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
         return AnhttpErrorSystem;
     }
 
-    struct sockaddr_in connSockAddr;
-    socklen_t connSockAddrLen;
-    int connSock = anhttpAccept(listener,
-            (struct sockaddr *)&connSockAddr,
-            &connSockAddrLen);
-    if (connSock == -1) {
-        anhttpLog("Failed to accept on socket: %s\n",
-                AnhttpGetSystemError());
-        tryClose(listener);
+    anhttpThread_t listenerThread;
+    anhttpConnectionQueue_t connectionQ;
+    AnhttpError_t error = anhttpStartListener(listener,
+            &listenerThread,
+            &connectionQ);
+    if (error != AnhttpErrorOK) {
+        anhttpLog("Failed to start listener: %s\n", AnhttpGetSystemError());
+        if (anhttpCloseListener(listener) == -1) {
+            anhttpLog("Failed to close listener: %s\n", AnhttpGetSystemError());
+        }
         return AnhttpErrorSystem;
     }
 
@@ -47,7 +40,6 @@ AnhttpError_t AnhttpListenAndServe(AnhttpServer_t *server) {
         anhttpLog("Failed to close listener: %s\n",
                 AnhttpGetSystemError());
     }
-    tryClose(connSock);
 
     return AnhttpErrorOK;
 }
