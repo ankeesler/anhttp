@@ -95,9 +95,7 @@ static void startSuccessTest(void) {
     anhttpAcceptFunction = acceptStub;
 
     anhttpThread_t thread;
-
     anhttpConnectionQueue_t connectionQ;
-
     AnhttpError_t error = anhttpStartListener(5, &thread, &connectionQ);
     TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK, error);
 
@@ -116,16 +114,9 @@ static void startThreadFailTest(void) {
     anhttpThreadRunReturn = AnhttpErrorSystem;
 
     anhttpThread_t thread;
-
     anhttpConnectionQueue_t connectionQ;
-    anhttpConnectionQueueInit(&connectionQ);
-
     AnhttpError_t error = anhttpStartListener(5, &thread, &connectionQ);
     TEST_ASSERT_EQUAL_STRING(AnhttpErrorSystem, error);
-}
-
-static void startConnectionQueueFailTest(void) {
-    // TODO:
 }
 
 int main(int argc, char *argv[]) {
@@ -138,7 +129,6 @@ int main(int argc, char *argv[]) {
 
     RUN_TEST(startSuccessTest);
     RUN_TEST(startThreadFailTest);
-    RUN_TEST(startConnectionQueueFailTest);
 
     return UNITY_END();
 }
