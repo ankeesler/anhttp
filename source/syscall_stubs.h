@@ -59,13 +59,18 @@ extern int anhttpBindArgsCount;
 extern int anhttpBindReturn;
 
 #define SYSCALL_STUBS_H_RESET() \
+    anhttpSocketFunction = (anhttpSocketFunction_t)0; \
     anhttpSocketArgsCount = (int)0; \
     anhttpSocketReturn = (int)0; \
+    anhttpListenFunction = (anhttpListenFunction_t)0; \
     anhttpListenArgsCount = (int)0; \
     anhttpListenReturn = (int)0; \
+    anhttpCloseFunction = (anhttpCloseFunction_t)0; \
     anhttpCloseArgsCount = (int)0; \
     anhttpCloseReturn = (int)0; \
+    anhttpAcceptFunction = (anhttpAcceptFunction_t)0; \
     anhttpAcceptArgsCount = (int)0; \
     anhttpAcceptReturn = (int)0; \
+    anhttpBindFunction = (anhttpBindFunction_t)0; \
     anhttpBindArgsCount = (int)0; \
     anhttpBindReturn = (int)0; \

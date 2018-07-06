@@ -35,9 +35,12 @@ extern int anhttpThreadCancelArgsCount;
 extern AnhttpError_t anhttpThreadCancelReturn;
 
 #define THREAD_STUBS_H_RESET() \
+    anhttpThreadRunFunction = (anhttpThreadRunFunction_t)0; \
     anhttpThreadRunArgsCount = (int)0; \
     anhttpThreadRunReturn = (AnhttpError_t)0; \
+    anhttpThreadWaitFunction = (anhttpThreadWaitFunction_t)0; \
     anhttpThreadWaitArgsCount = (int)0; \
     anhttpThreadWaitReturn = (AnhttpError_t)0; \
+    anhttpThreadCancelFunction = (anhttpThreadCancelFunction_t)0; \
     anhttpThreadCancelArgsCount = (int)0; \
     anhttpThreadCancelReturn = (AnhttpError_t)0; \

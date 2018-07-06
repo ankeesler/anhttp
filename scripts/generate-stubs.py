@@ -141,6 +141,7 @@ def write_h_file(f, stub_file):
             f.write("    %s %s;\n" % (arg.cleaned_type(), arg.name))
         f.write("} %sArgs_t;\n" % (function.name))
         f.write("extern %s %sFunction;\n" % (function_type_name(function), function.name))
+        state.append(("%sFunction" % (function.name), function_type_name(function)))
         f.write("extern %sArgs_t %sArgs[];\n" % (function.name, function.name))
         f.write("extern int %sArgsCount;\n" % (function.name))
         state.append(("%sArgsCount" % (function.name), "int"))
