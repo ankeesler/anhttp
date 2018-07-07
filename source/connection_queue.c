@@ -37,11 +37,6 @@ void anhttpConnectionQueueFree(anhttpConnectionQueue_t *q) {
 
 AnhttpError_t anhttpConnectionQueueAdd(anhttpConnectionQueue_t *q,
         anhttpConnection_t *connection) {
-    AnhttpError_t error = lock(q);
-    if (error != AnhttpErrorOK) {
-        return error;
-    }
-
     int writeCount = write(q->pipeFds[PIPE_WRITE_FD],
             connection,
             sizeof(anhttpConnection_t));
@@ -50,6 +45,11 @@ AnhttpError_t anhttpConnectionQueueAdd(anhttpConnectionQueue_t *q,
         return AnhttpErrorSystem;
     } else if (writeCount < sizeof(anhttpConnection_t)) {
         assert(0); // :(
+    }
+
+    AnhttpError_t error = lock(q);
+    if (error != AnhttpErrorOK) {
+        return error;
     }
 
     q->length++;
@@ -64,11 +64,6 @@ AnhttpError_t anhttpConnectionQueueAdd(anhttpConnectionQueue_t *q,
 
 AnhttpError_t anhttpConnectionQueueRemove(anhttpConnectionQueue_t *q,
         anhttpConnection_t *connection) {
-    AnhttpError_t error = lock(q);
-    if (error != AnhttpErrorOK) {
-        return error;
-    }
-
     int readCount = read(q->pipeFds[PIPE_READ_FD],
             connection,
             sizeof(anhttpConnection_t));
@@ -76,6 +71,11 @@ AnhttpError_t anhttpConnectionQueueRemove(anhttpConnectionQueue_t *q,
         return AnhttpErrorSystem;
     } else if (readCount < sizeof(anhttpConnection_t)) {
         assert(0); // :(
+    }
+
+    AnhttpError_t error = lock(q);
+    if (error != AnhttpErrorOK) {
+        return error;
     }
 
     q->length--;

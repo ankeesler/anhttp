@@ -175,9 +175,88 @@ static void concurrentTest(void) {
     TEST_ASSERT_EQUAL_INT(0, fail);
 }
 
+#define SIMPLE_Q_MARK 0x1234ABCD
+#define SIMPLE_Q_SPIN 0x01
+#define SIMPLE_Q_DONE 0x02
+#define SIMPLE_Q_READY 0x10
+
+typedef struct {
+    int mark;
+    int status;
+    anhttpConnectionQueue_t *q;
+    anhttpConnection_t c;
+} simpleQ_t;
+
+static void *simpleRead(void *input) {
+    simpleQ_t *sq = (simpleQ_t *)input;
+    if (sq->mark != SIMPLE_Q_MARK) {
+        printf("FAILURE: 0x%08X != 0x%08X\n", sq->mark, SIMPLE_Q_MARK);
+        assert(0);
+    }
+
+    // AAA
+    sq->status |= SIMPLE_Q_READY;
+    // BBB
+    while (sq->status & SIMPLE_Q_SPIN) {
+    }
+    // CCC
+
+    TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK,
+            anhttpConnectionQueueRemove(sq->q, &sq->c));
+
+    // DDD
+    sq->status |= SIMPLE_Q_DONE;
+    // EEE
+
+    while (1) { }
+
+    return NULL;
+}
+
+static void deadlockTest(void) {
+    anhttpConnectionQueue_t q;
+    AnhttpError_t error = anhttpConnectionQueueInit(&q);
+    TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK, error);
+
+    simpleQ_t readSq = {
+        .mark = SIMPLE_Q_MARK,
+        .status = SIMPLE_Q_SPIN,
+        .q = &q,
+    };
+    anhttpThread_t readThread;
+    TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK,
+            anhttpThreadRun(&readThread, simpleRead, &readSq));
+
+    // AAA
+    while (!(readSq.status & SIMPLE_Q_READY)) {
+    }
+    // BBB
+    readSq.status &= ~ SIMPLE_Q_SPIN;
+    // CCC
+
+    // This is race'y, but it will have to do.
+
+    anhttpConnection_t c = {
+        .fd = 5,
+    };
+    TEST_ASSERT_EQUAL_STRING(AnhttpErrorOK, anhttpConnectionQueueAdd(&q, &c));
+
+    // DDD
+    while (!(readSq.status & SIMPLE_Q_DONE)) {
+    }
+    // EEE
+
+    int length = -1;
+    TEST_ASSERT_EQUAL_INT(AnhttpErrorOK,
+            anhttpConnectionQueueLength(&q, &length));
+    TEST_ASSERT_EQUAL_INT(0, length);
+    TEST_ASSERT_EQUAL_INT(5, readSq.c.fd);
+}
+
 int main(int argc, char *argv[]) {
     UNITY_BEGIN();
     RUN_TEST(basicTest);
     RUN_TEST(concurrentTest);
+    RUN_TEST(deadlockTest);
     return UNITY_END();
 }

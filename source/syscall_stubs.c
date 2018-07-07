@@ -74,3 +74,33 @@ int anhttpBind(int socket, const struct sockaddr *address, socklen_t address_len
     return anhttpBindReturn;
 }
 
+// anhttpRead
+anhttpReadFunction_t anhttpReadFunction = (anhttpReadFunction_t)0;
+anhttpReadArgs_t anhttpReadArgs[64];
+int anhttpReadArgsCount = 0;
+ssize_t anhttpReadReturn = (ssize_t)0;
+ssize_t anhttpRead(int fd, void *buffer, size_t nbyte) {
+    if (anhttpReadArgsCount == 64) assert(0);
+    anhttpReadArgs[anhttpReadArgsCount].fd = fd;
+    anhttpReadArgs[anhttpReadArgsCount].buffer = buffer;
+    anhttpReadArgs[anhttpReadArgsCount].nbyte = nbyte;
+    anhttpReadArgsCount++;
+    if (anhttpReadFunction != (anhttpReadFunction_t)0) return anhttpReadFunction(fd, buffer, nbyte);
+    return anhttpReadReturn;
+}
+
+// anhttpWrite
+anhttpWriteFunction_t anhttpWriteFunction = (anhttpWriteFunction_t)0;
+anhttpWriteArgs_t anhttpWriteArgs[64];
+int anhttpWriteArgsCount = 0;
+ssize_t anhttpWriteReturn = (ssize_t)0;
+ssize_t anhttpWrite(int fd, const void *buffer, size_t nbyte) {
+    if (anhttpWriteArgsCount == 64) assert(0);
+    anhttpWriteArgs[anhttpWriteArgsCount].fd = fd;
+    anhttpWriteArgs[anhttpWriteArgsCount].buffer = buffer;
+    anhttpWriteArgs[anhttpWriteArgsCount].nbyte = nbyte;
+    anhttpWriteArgsCount++;
+    if (anhttpWriteFunction != (anhttpWriteFunction_t)0) return anhttpWriteFunction(fd, buffer, nbyte);
+    return anhttpWriteReturn;
+}
+

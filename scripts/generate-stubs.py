@@ -99,7 +99,7 @@ class Arg:
         return self.teyep == "const char*"
 
     def is_voidstar(self):
-        return self.teyep == "void*"
+        return self.teyep == "void*" or self.teyep == "const void*"
 
     def cleaned_type(self):
         teyep = self.teyep
