@@ -18,3 +18,7 @@ scripts/generate-stubs.py \
     source/connection_queue.h \
     source/connection_queue_stubs.h \
     source/connection_queue_stubs.c
+scripts/generate-stubs.py \
+    source/http.h \
+    source/http_stubs.h \
+    source/http_stubs.c

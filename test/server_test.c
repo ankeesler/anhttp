@@ -8,6 +8,7 @@
 #include "source/listener_stubs.h"
 #include "source/connection_queue_stubs.h"
 #include "source/thread_stubs.h"
+#include "source/http_stubs.h"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -101,6 +102,41 @@ static AnhttpError_t connectionQueueRemoveFunction(anhttpConnectionQueue_t *q,
     return (call++ < 3 ? AnhttpErrorOK : AnhttpErrorSystem);
 }
 
+static ssize_t readStub(int fd, void *buf, size_t buf_size) {
+    static int calls = 0;
+    ++calls;
+    TEST_ASSERT_TRUE(calls <= 3);
+    buf = "hello";
+    return 5;
+}
+
+static AnhttpError_t parseHttpRequestStub(AnhttpRequest_t *req,
+        void *buf,
+        size_t bufLen) {
+    req->method = ANHTTP_METHOD_GET;
+    req->uri = "/tuna/fish";
+    req->payload = (unsigned char *)"hello";
+    req->payloadLen = 5;
+    return AnhttpErrorOK;
+}
+
+static int fakeHandlerCalled = 0;
+static void fakeHandler(AnhttpResponse_t *rsp, const AnhttpRequest_t *req) {
+    fakeHandlerCalled = 1;
+
+    TEST_ASSERT_EQUAL_INT(ANHTTP_STATUS_OK, rsp->status);
+
+    TEST_ASSERT_EQUAL_STRING(ANHTTP_METHOD_GET, req->method);
+    TEST_ASSERT_EQUAL_STRING("/tuna/fish", req->uri);
+
+    char *payload = "hello";
+    TEST_ASSERT_EQUAL_INT(5, req->payloadLen);
+    TEST_ASSERT_EQUAL_MEMORY(payload, req->payload, 5);
+
+    rsp->payload = (unsigned char *)"hello";
+    rsp->payloadLen = 5;
+}
+
 static void basicServingSuccessTest(void) {
     SYSCALL_STUBS_H_RESET();
     LISTENER_STUBS_H_RESET();
@@ -110,11 +146,32 @@ static void basicServingSuccessTest(void) {
     anhttpStartListenerReturn = AnhttpErrorOK;
     anhttpConnectionQueueRemoveFunction = connectionQueueRemoveFunction;
     anhttpConnectionQueueInitReturn = AnhttpErrorOK;
+    anhttpReadFunction = readStub;
+    anhttpParseHttpRequestFunction = parseHttpRequestStub;
 
     AnhttpServer_t server;
     memset(&server, 0, sizeof(server));
+    server.handler = fakeHandler;
     AnhttpError_t error = AnhttpListenAndServe(&server);
     TEST_ASSERT_EQUAL(AnhttpErrorOK, error);
+
+    TEST_ASSERT_EQUAL_INT(3, anhttpReadArgsCount);
+    TEST_ASSERT_EQUAL_INT(6, anhttpReadArgs[0].fd);
+    TEST_ASSERT_EQUAL_INT(7, anhttpReadArgs[1].fd);
+    TEST_ASSERT_EQUAL_INT(8, anhttpReadArgs[2].fd);
+
+    TEST_ASSERT_EQUAL_INT(3, anhttpParseHttpRequestArgsCount);
+
+    const char *response = "hello";
+    TEST_ASSERT_EQUAL_INT(3, anhttpWriteArgsCount);
+    TEST_ASSERT_EQUAL_INT(6, anhttpWriteArgs[0].fd);
+    TEST_ASSERT_EQUAL_MEMORY(response, anhttpWriteArgs[0].buffer, 5);
+    TEST_ASSERT_EQUAL_INT(7, anhttpWriteArgs[1].fd);
+    TEST_ASSERT_EQUAL_MEMORY(response, anhttpWriteArgs[1].buffer, 5);
+    TEST_ASSERT_EQUAL_INT(8, anhttpWriteArgs[2].fd);
+    TEST_ASSERT_EQUAL_MEMORY(response, anhttpWriteArgs[2].buffer, 5);
+
+    TEST_ASSERT_EQUAL_INT(1, fakeHandlerCalled);
 
     TEST_ASSERT_EQUAL_INT(3, anhttpCloseArgsCount);
     TEST_ASSERT_EQUAL_INT(6, anhttpCloseArgs[0].fd);
@@ -122,6 +179,15 @@ static void basicServingSuccessTest(void) {
     TEST_ASSERT_EQUAL_INT(8, anhttpCloseArgs[2].fd);
 
     TEST_ASSERT_EQUAL_INT(1, anhttpThreadCancelArgsCount);
+}
+
+static void readFailServingTest(void) {
+}
+
+static void parseFailServingTest(void) {
+}
+
+static void writeFailServingTest(void) {
 }
 
 int main(int argc, char *argv[]) {
@@ -135,6 +201,9 @@ int main(int argc, char *argv[]) {
 
     // Serving
     RUN_TEST(basicServingSuccessTest);
+    RUN_TEST(readFailServingTest);
+    RUN_TEST(parseFailServingTest);
+    RUN_TEST(writeFailServingTest);
 
     return UNITY_END();
 }

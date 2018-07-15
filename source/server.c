@@ -3,6 +3,7 @@
 #include "syscall.h"
 #include "log.h"
 #include "listener.h"
+#include "http.h"
 
 #include <sys/socket.h>
 #include <string.h>
@@ -106,7 +107,20 @@ static void handleConnection(AnhttpServer_t *server, int fd) {
     anhttpLogf("read %ld bytes\n", readCount);
     anhttpLogf("Received %s\n", buffer);
 
-    char rsp[] = "helloooooo";
-    ssize_t writeCount = anhttpWrite(fd, rsp, sizeof(rsp));
+    AnhttpRequest_t req;
+    memset(&req, 0, sizeof(req));
+    AnhttpError_t error = anhttpParseHttpRequest(&req, buffer, readCount);
+    (void)error;
+
+    AnhttpResponse_t rsp;
+    memset(&rsp, 0, sizeof(rsp));
+    rsp.status = ANHTTP_STATUS_OK;
+    if (server->handler != NULL) {
+        server->handler(&rsp, &req);
+    } else {
+        anhttpLog("Server does not contain handler\n");
+    }
+
+    ssize_t writeCount = anhttpWrite(fd, rsp.payload, rsp.payloadLen);
     anhttpLogf("wrote %ld bytes\n", writeCount);
 }
