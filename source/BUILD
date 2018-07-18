@@ -5,7 +5,11 @@ cc_library(
         "log.c",
     ],
     hdrs = ["log.h"],
-    copts = ["-Iinclude"],
+    copts = [
+        "-Iinclude",
+        "-Wall",
+        "-Werror",
+    ],
     visibility = ["//visibility:public"],
     deps = ["//include/anhttp"],
 )
@@ -21,7 +25,11 @@ cc_library(
     name = "syscall_lib",
     srcs = ["syscall.c"],
     hdrs = ["syscall.h"],
-    copts = ["-Iinclude"],
+    copts = [
+        "-Iinclude",
+        "-Wall",
+        "-Werror",
+    ],
     visibility = ["//visibility:public"],
     deps = ["//include/anhttp"],
 )
@@ -33,7 +41,11 @@ cc_library(
         "syscall_stubs.c",
     ],
     hdrs = ["syscall_stubs.h"],
-    copts = ["-Iinclude"],
+    copts = [
+        "-Iinclude",
+        "-Wall",
+        "-Werror",
+    ],
     visibility = ["//visibility:public"],
     deps = ["//include/anhttp"],
 )
@@ -42,7 +54,11 @@ cc_library(
     name = "util_lib",
     srcs = ["util.c"],
     hdrs = ["util.h"],
-    copts = ["-Iinclude"],
+    copts = [
+        "-Iinclude",
+        "-Wall",
+        "-Werror",
+    ],
     visibility = ["//visibility:public"],
     deps = ["//include/anhttp"],
 )
@@ -51,7 +67,11 @@ cc_library(
     name = "thread_lib",
     srcs = ["thread.c"],
     hdrs = ["thread.h"],
-    copts = ["-Iinclude"],
+    copts = [
+        "-Iinclude",
+        "-Wall",
+        "-Werror",
+    ],
     visibility = ["//visibility:public"],
     deps = ["//include/anhttp"],
 )
@@ -63,7 +83,11 @@ cc_library(
         "thread_stubs.c",
     ],
     hdrs = ["thread_stubs.h"],
-    copts = ["-Iinclude"],
+    copts = [
+        "-Iinclude",
+        "-Wall",
+        "-Werror",
+    ],
     visibility = ["//visibility:public"],
     deps = ["//include/anhttp"],
 )
@@ -72,7 +96,11 @@ cc_library(
     name = "connection_queue_lib",
     srcs = ["connection_queue.c"],
     hdrs = ["connection_queue.h"],
-    copts = ["-Iinclude"],
+    copts = [
+        "-Iinclude",
+        "-Wall",
+        "-Werror",
+    ],
     visibility = ["//visibility:public"],
     deps = ["//include/anhttp"],
 )
@@ -84,7 +112,11 @@ cc_library(
         "connection_queue_stubs.c",
     ],
     hdrs = ["connection_queue_stubs.h"],
-    copts = ["-Iinclude"],
+    copts = [
+        "-Iinclude",
+        "-Wall",
+        "-Werror",
+    ],
     visibility = ["//visibility:public"],
     deps = ["//include/anhttp"],
 )
@@ -100,7 +132,11 @@ cc_library(
         "util.h",
     ],
     hdrs = ["listener.h"],
-    copts = ["-Iinclude"],
+    copts = [
+        "-Iinclude",
+        "-Wall",
+        "-Werror",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//include/anhttp",
@@ -117,7 +153,11 @@ cc_library(
         "thread.h",
     ],
     hdrs = ["listener_stubs.h"],
-    copts = ["-Iinclude"],
+    copts = [
+        "-Iinclude",
+        "-Wall",
+        "-Werror",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//include/anhttp",
@@ -128,7 +168,11 @@ cc_library(
     name = "http_lib",
     srcs = ["http.c"],
     hdrs = ["http.h"],
-    copts = ["-Iinclude"],
+    copts = [
+        "-Iinclude",
+        "-Wall",
+        "-Werror",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":core_lib",
@@ -143,7 +187,11 @@ cc_library(
         "http_stubs.c",
     ],
     hdrs = ["http_stubs.h"],
-    copts = ["-Iinclude"],
+    copts = [
+        "-Iinclude",
+        "-Wall",
+        "-Werror",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//include/anhttp",
@@ -161,7 +209,11 @@ cc_library(
         "thread.h",
     ],
     hdrs = ["listener.h"],
-    copts = ["-Iinclude"],
+    copts = [
+        "-Iinclude",
+        "-Wall",
+        "-Werror",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//include/anhttp",
@@ -170,7 +222,11 @@ cc_library(
 
 cc_library(
     name = "anhttp",
-    copts = ["-Iinclude"],
+    copts = [
+        "-Iinclude",
+        "-Wall",
+        "-Werror",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":connection_queue_lib",

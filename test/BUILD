@@ -5,6 +5,8 @@ cc_test(
         "-Iexternal/unity/src",
         "-Iinclude",
         "-I.",
+        "-Wall",
+        "-Werror",
     ],
     deps = [
         "//source:list_lib",
@@ -19,6 +21,8 @@ cc_test(
         "-Iexternal/unity/src",
         "-Iinclude",
         "-I.",
+        "-Wall",
+        "-Werror",
     ],
     deps = [
         "//include/anhttp",
@@ -35,6 +39,8 @@ cc_test(
         "-Iexternal/unity/src",
         "-Iinclude",
         "-I.",
+        "-Wall",
+        "-Werror",
     ],
     deps = [
         "//include/anhttp",
@@ -53,6 +59,8 @@ cc_test(
         "-Iexternal/unity/src",
         "-Iinclude",
         "-I.",
+        "-Wall",
+        "-Werror",
     ],
     deps = [
         "//include/anhttp",
@@ -74,6 +82,8 @@ cc_test(
         "-Iexternal/unity/src",
         "-Iinclude",
         "-I.",
+        "-Wall",
+        "-Werror",
     ],
     deps = [
         "//include/anhttp",
