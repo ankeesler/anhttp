@@ -137,16 +137,16 @@ cc_library(
 cc_library(
     name = "listener_stubs_lib",
     srcs = [
+        "connection_queue.h",
         "listener.h",
         "listener_stubs.c",
+        "syscall.h",
+        "thread.h",
     ],
     hdrs = ["listener_stubs.h"],
     copts = ["-Iinclude"],
     visibility = ["//visibility:public"],
     deps = [
-        ":connection_queue_lib",
-        ":syscall_lib",
-        ":thread_lib",
         "//include/anhttp",
     ],
 )
