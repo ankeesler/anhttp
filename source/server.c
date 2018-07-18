@@ -109,7 +109,9 @@ static void handleConnection(AnhttpServer_t *server, int fd) {
 
     AnhttpRequest_t req;
     memset(&req, 0, sizeof(req));
-    AnhttpError_t error = anhttpParseHttpRequest(&req, buffer, readCount);
+    AnhttpError_t error = anhttpParseHttpRequest(&req,
+            buffer,
+            readCount);
     (void)error;
 
     AnhttpResponse_t rsp;
