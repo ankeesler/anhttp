@@ -1,5 +1,11 @@
-build
+build/
 
 *.swp
 
 tags
+
+bazel-anhttp
+bazel-bin
+bazel-genfiles
+bazel-out
+bazel-testlogs
