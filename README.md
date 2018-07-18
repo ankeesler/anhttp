@@ -1,12 +1,18 @@
+```
 anhttp = Andrew's HTTP library
          ^^       ^^^^
+```
 
 This is an academic HTTP library.
 
-Build setup:
+CMake build setup:
 1. Go into a separate directory
-2. Run `cmake path/to/anhttp/root`
-3. Run `make anhttp` (the libanhttp.a artifact will pop out in source/)
+1. Run `cmake path/to/anhttp/root`
+1. Run `make anhttp` (the libanhttp.a artifact will pop out in source/)
+
+Bazel build setup:
+1. Run bazel build //source:anhttp
+1. Uh...
 
 Directory structure:
 - include/ contains the public library API
