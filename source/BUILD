@@ -1,31 +1,4 @@
 cc_library(
-    name = "anhttp",
-    srcs = [
-        "connection_queue.c",
-        "connection_queue.h",
-        "error.c",
-        "http.c",
-        "http.h",
-        "list.c",
-        "list.h",
-        "listener.c",
-        "listener.h",
-        "log.c",
-        "log.h",
-        "server.c",
-        "syscall.c",
-        "syscall.h",
-        "thread.c",
-        "thread.h",
-        "util.c",
-        "util.h",
-    ],
-    copts = ["-Iinclude"],
-    visibility = ["//visibility:public"],
-    deps = ["//include/anhttp"],
-)
-
-cc_library(
     name = "core_lib",
     srcs = [
         "error.c",
@@ -75,27 +48,6 @@ cc_library(
 )
 
 cc_library(
-    name = "connection_queue_lib",
-    srcs = ["connection_queue.c"],
-    hdrs = ["connection_queue.h"],
-    copts = ["-Iinclude"],
-    visibility = ["//visibility:public"],
-    deps = ["//include/anhttp"],
-)
-
-cc_library(
-    name = "connection_queue_stubs_lib",
-    srcs = [
-        "connection_queue.h",
-        "connection_queue_stubs.c",
-    ],
-    hdrs = ["connection_queue_stubs.h"],
-    copts = ["-Iinclude"],
-    visibility = ["//visibility:public"],
-    deps = ["//include/anhttp"],
-)
-
-cc_library(
     name = "thread_lib",
     srcs = ["thread.c"],
     hdrs = ["thread.h"],
@@ -111,6 +63,27 @@ cc_library(
         "thread_stubs.c",
     ],
     hdrs = ["thread_stubs.h"],
+    copts = ["-Iinclude"],
+    visibility = ["//visibility:public"],
+    deps = ["//include/anhttp"],
+)
+
+cc_library(
+    name = "connection_queue_lib",
+    srcs = ["connection_queue.c"],
+    hdrs = ["connection_queue.h"],
+    copts = ["-Iinclude"],
+    visibility = ["//visibility:public"],
+    deps = ["//include/anhttp"],
+)
+
+cc_library(
+    name = "connection_queue_stubs_lib",
+    srcs = [
+        "connection_queue.h",
+        "connection_queue_stubs.c",
+    ],
+    hdrs = ["connection_queue_stubs.h"],
     copts = ["-Iinclude"],
     visibility = ["//visibility:public"],
     deps = ["//include/anhttp"],
@@ -191,11 +164,23 @@ cc_library(
     copts = ["-Iinclude"],
     visibility = ["//visibility:public"],
     deps = [
-        #":thread_lib",
-        #":connection_queue_lib",
-        #":syscall_lib",
-        #":core_lib",
-        #":http_lib",
+        "//include/anhttp",
+    ],
+)
+
+cc_library(
+    name = "anhttp",
+    copts = ["-Iinclude"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":connection_queue_lib",
+        ":core_lib",
+        ":http_lib",
+        ":listener_lib",
+        ":server_lib",
+        ":syscall_lib",
+        ":thread_lib",
+        ":util_lib",
         "//include/anhttp",
     ],
 )
